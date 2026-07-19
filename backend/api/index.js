@@ -12,17 +12,24 @@ app.use(express.json({ limit: '10mb' }));
 let db;
 let useSqlite = false;
 
-try {
-  const Database = require('better-sqlite3');
-  db = new Database('/tmp/kidshield.db');
-  db.pragma('journal_mode=WAL');
-  useSqlite = true;
-  initSqliteTables();
-  console.log('✅ 使用 SQLite 存储');
-} catch (e) {
-  // 内存模式（适用于 Vercel serverless）
+// Vercel 环境强制使用内存模式
+if (process.env.VERCEL) {
   db = createMemoryDB();
-  console.log('📦 使用内存存储（数据不持久化）');
+  useSqlite = false;
+  console.log('📦 Vercel 模式：使用内存存储');
+} else {
+  try {
+    const Database = require('better-sqlite3');
+    db = new Database('/tmp/kidshield.db');
+    db.pragma('journal_mode=WAL');
+    useSqlite = true;
+    initSqliteTables();
+    console.log('✅ 使用 SQLite 存储');
+  } catch (e) {
+    // 内存模式（适用于 Vercel serverless）
+    db = createMemoryDB();
+    console.log('📦 使用内存存储（数据不持久化）');
+  }
 }
 
 function initSqliteTables() {
