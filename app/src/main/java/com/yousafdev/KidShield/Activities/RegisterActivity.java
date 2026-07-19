@@ -1,6 +1,7 @@
 package com.yousafdev.KidShield.Activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -15,12 +16,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.yousafdev.KidShield.Network.ApiClient;
-import org.json.JSONObject;
 import com.yousafdev.KidShield.R;
 import com.yousafdev.KidShield.Network.ApiClient;
 
-import java.util.HashMap;
+import org.json.JSONObject;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -99,45 +98,40 @@ public class RegisterActivity extends AppCompatActivity {
 
         progressBar.setVisibility(View.VISIBLE);
 
-        // Create user with Firebase Auth
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
+        // 使用自建 API 注册
+        new Thread(() -> {
+            try {
+                ApiClient apiClient = new ApiClient();
+                RadioButton selectedRadioButton = findViewById(selectedRoleId);
+                String role = selectedRadioButton.getText().toString().toLowerCase();
+                String nickname = role.equals("parent") ? "家长" : "孩子";
+
+                JSONObject result = apiClient.register(email, password, role, nickname);
+                String token = result.optString("token", "");
+
+                // 保存 Token 到本地
+                if (!token.isEmpty()) {
+                    SharedPreferences prefs = getSharedPreferences("kidshield", MODE_PRIVATE);
+                    prefs.edit()
+                        .putString("token", token)
+                        .putString("email", email)
+                        .putString("role", role)
+                        .putString("user_id", result.optString("uid", ""))
+                        .apply();
+                }
+
+                runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
-                    if (task.isSuccessful()) {
-// ⚠️ REMOVED FIREBASE: FirebaseUser firebaseUser = mAuth.getCurrentUser();
-                        if (firebaseUser != null) {
-                            String userId = firebaseUser.getUid();
-                            RadioButton selectedRadioButton = findViewById(selectedRoleId);
-                            String role = selectedRadioButton.getText().toString().toLowerCase();
-
-                            // Create a user map to store in Realtime Database
-                            HashMap<String, String> userMap = new HashMap<>();
-                            userMap.put("uid", userId);
-                            userMap.put("email", email);
-                            userMap.put("role", role);
-
-                            if (role.equals("child")) {
-                                userMap.put("parentEmail", parentEmail);
-                            }
-
-                            // Save user info to database
-                            mDatabase.child("users").child(userId).setValue(userMap)
-                                    .addOnCompleteListener(dbTask -> {
-                                        if (dbTask.isSuccessful()) {
-                                            Toast.makeText(RegisterActivity.this, "注册成功！", Toast.LENGTH_SHORT).show();
-                                            // Send user to Login screen after successful registration
-                                            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-                                            finish();
-                                        } else {
-                                            // Handle database write error
-                                            Toast.makeText(RegisterActivity.this, "数据库错误：" + dbTask.getException().getMessage(), Toast.LENGTH_LONG).show();
-                                        }
-                                    });
-                        }
-                    } else {
-                        // Handle registration failure
-                        Toast.makeText(RegisterActivity.this, "注册失败：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                    }
+                    Toast.makeText(RegisterActivity.this, "注册成功！", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                    finish();
                 });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(RegisterActivity.this, "注册失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
     }
 }

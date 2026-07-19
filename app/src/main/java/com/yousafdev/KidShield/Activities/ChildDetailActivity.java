@@ -40,12 +40,12 @@ public class ChildDetailActivity extends AppCompatActivity {
         commandStore = new CommandStore(this);
         apiClient = new ApiClient();
 
-        missionCountView = findViewById(R.id.textView_mission_count);
-        timeRequestCountView = findViewById(R.id.textView_time_request_count);
+        missionCountView = findViewById(R.id.textView_pending_missions);
+        timeRequestCountView = findViewById(R.id.textView_pending_time_requests);
 
         loadPendingCounts();
 
-        Button approveMissionsBtn = findViewById(R.id.button_approve_missions);
+        Button approveMissionsBtn = findViewById(R.id.button_mission_approval);
         if (approveMissionsBtn != null) {
             approveMissionsBtn.setOnClickListener(v -> showMissionApprovalDialog());
         }
@@ -86,7 +86,7 @@ public class ChildDetailActivity extends AppCompatActivity {
                     m.id = obj.optString("id", "");
                     m.title = obj.optString("title", "");
                     m.description = obj.optString("description", "");
-                    m.reward = obj.optInt("reward", 0);
+                    m.rewardMinutes = obj.optInt("rewardMinutes", obj.optInt("reward", 0));
                     m.status = "pending";
                     pendingMissions.add(m);
                 }

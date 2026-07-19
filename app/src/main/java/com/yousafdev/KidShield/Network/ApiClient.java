@@ -26,7 +26,7 @@ public class ApiClient {
     private static ApiClient instance;
     private String authToken;
     
-    private ApiClient() {}
+    public ApiClient() {}
     
     public static synchronized ApiClient getInstance() {
         if (instance == null) instance = new ApiClient();
@@ -92,6 +92,17 @@ public class ApiClient {
         return httpGet("/api/time-requests/" + childId);
     }
     
+    // ===================== 创建任务 =====================
+    public String createMission(String token, String childId, String title, String desc, int reward) throws Exception {
+        JSONObject body = new JSONObject();
+        body.put("child_id", childId);
+        body.put("title", title);
+        body.put("description", desc);
+        body.put("reward", reward);
+        JSONObject resp = httpPost("/api/missions/create", body.toString());
+        return resp.toString();
+    }
+
     // ===================== 获取使用统计 =====================
     public JSONObject getUsageStats(String childId) throws Exception {
         return httpGet("/api/usage/" + childId);

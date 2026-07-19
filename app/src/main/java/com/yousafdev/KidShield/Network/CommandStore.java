@@ -140,6 +140,66 @@ public class CommandStore {
         return list;
     }
     
+    /**
+     * 保存白名单模式开关
+     */
+    public void saveWhitelistMode(boolean enabled) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("enabled", enabled);
+            writeFile(new File(policiesDir, "whitelist_mode.json"), obj.toString(2));
+            Log.d(TAG, "🔲 白名单模式: " + (enabled ? "已开启" : "已关闭"));
+        } catch (Exception e) {
+            Log.e(TAG, "保存白名单模式失败", e);
+        }
+    }
+    
+    public boolean getWhitelistMode() {
+        try {
+            String content = readFile(new File(policiesDir, "whitelist_mode.json"));
+            if (content != null) {
+                return new JSONObject(content).optBoolean("enabled", false);
+            }
+        } catch (Exception e) {}
+        return false;
+    }
+    
+    /**
+     * 获取白名单包名列表（简化版）
+     */
+    public List<String> getWhitelistPackageNames() {
+        List<String> list = new ArrayList<>();
+        List<Map<String, String>> apps = getWhitelistApps();
+        for (Map<String, String> app : apps) {
+            list.add(app.get("package_name"));
+        }
+        return list;
+    }
+    
+    /**
+     * 保存开发者模式封锁状态
+     */
+    public void saveDevModeBlocked(boolean blocked) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("blocked", blocked);
+            writeFile(new File(policiesDir, "dev_mode_block.json"), obj.toString(2));
+            Log.d(TAG, "🚫 开发者模式封锁: " + (blocked ? "已开启" : "已关闭"));
+        } catch (Exception e) {
+            Log.e(TAG, "保存开发者封锁状态失败", e);
+        }
+    }
+    
+    public boolean isDevModeBlocked() {
+        try {
+            String content = readFile(new File(policiesDir, "dev_mode_block.json"));
+            if (content != null) {
+                return new JSONObject(content).optBoolean("blocked", false);
+            }
+        } catch (Exception e) {}
+        return false;
+    }
+    
     // ========== 3. 锁定模式（全局锁机） ==========
     
     /**

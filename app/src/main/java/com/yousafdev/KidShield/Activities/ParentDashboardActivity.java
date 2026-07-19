@@ -43,6 +43,7 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
         SharedPreferences prefs = getSharedPreferences("kidshield", MODE_PRIVATE);
         token = prefs.getString("token", "");
+        apiClient.setToken(token);
 
         childList = new ArrayList<>();
         adapter = new ChildAdapter(childList, this);
@@ -63,7 +64,7 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
         new Thread(() -> {
             try {
-                String result = apiClient.getChildren(token);
+                String result = apiClient.getChildren().toString();
                 JSONArray childrenArr = new JSONArray(result);
 
                 List<Child> tempList = new ArrayList<>();
@@ -73,7 +74,8 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
                     String email = childObj.optString("email", "");
                     String nickname = childObj.optString("nickname", "");
                     if (!uid.isEmpty()) {
-                        tempList.add(new Child(uid, email, nickname));
+                        Child child = new Child(uid, email);
+                        tempList.add(child);
                     }
                 }
 

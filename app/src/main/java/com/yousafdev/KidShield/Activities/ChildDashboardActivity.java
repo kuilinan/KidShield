@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -35,8 +36,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.yousafdev.KidShield.Models.Mission;
+import com.yousafdev.KidShield.Network.ApiClient;
+import com.yousafdev.KidShield.Network.CommandStore;
 import com.yousafdev.KidShield.R;
 import com.yousafdev.KidShield.Utils.UsageTracker;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +66,8 @@ public class ChildDashboardActivity extends AppCompatActivity {
     private TextView textViewLocationStatus;
 
     // 改用 CommandStore 本地读取
+    private CommandStore commandStore;
+    private ApiClient apiClient;
     private String currentUid;
     private UsageTracker usageTracker;
     private Handler handler;
@@ -76,11 +83,16 @@ public class ChildDashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_child_dashboard);
 
         // 本地策略
+        commandStore = new CommandStore(this);
+        apiClient = new ApiClient();
         usageTracker = new UsageTracker(this);
         handler = new Handler(Looper.getMainLooper());
         
-        // 改用本地token判断
-        currentUid = getSharedPreferences("kidshield", MODE_PRIVATE).getString("user_id", "");
+        // 获取登录信息
+        SharedPreferences prefs = getSharedPreferences("kidshield", MODE_PRIVATE);
+        currentUid = prefs.getString("user_id", "");
+        String token = prefs.getString("token", "");
+        apiClient.setToken(token);
         Log.d(TAG, "当前用户UID: " + currentUid);
         initViews();
         setupListeners();
@@ -219,7 +231,7 @@ public class ChildDashboardActivity extends AppCompatActivity {
                 mission.id = obj.optString("id", "mission_" + i);
                 mission.title = obj.optString("title", "");
                 mission.description = obj.optString("description", "");
-                mission.reward = obj.optInt("reward", 0);
+                mission.rewardMinutes = obj.optInt("rewardMinutes", obj.optInt("reward", 0));
                 mission.status = obj.optString("status", "");
                 missionList.add(mission);
             }
@@ -281,12 +293,6 @@ public class ChildDashboardActivity extends AppCompatActivity {
             
             // 通过 API 提交任务
             try {
-                JSONObject missionData = new JSONObject();
-                missionData.put("title", title);
-                missionData.put("description", desc);
-                missionData.put("reward", reward);
-                missionData.put("status", "child_submit");
-
                 // 用 API 提交
                 String result = apiClient.createMission(
                     getSharedPreferences("kidshield", MODE_PRIVATE).getString("token", ""),

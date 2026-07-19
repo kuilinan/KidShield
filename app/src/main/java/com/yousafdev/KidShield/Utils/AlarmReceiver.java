@@ -18,8 +18,8 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         // Create an intent to start the MonitoringService
         Intent serviceIntent = new Intent(context, MonitoringService.class);
-        // Add our custom action to tell the service to sync data
-        serviceIntent.setAction(MonitoringService.ACTION_SYNC_DATA);
+        // 同步数据（本地模式直接触发同步）
+        serviceIntent.setAction("com.yousafdev.KidShield.SYNC_DATA");
 
         // Start the service correctly based on the Android version
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
