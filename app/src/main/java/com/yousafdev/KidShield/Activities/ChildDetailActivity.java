@@ -20,11 +20,11 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+
+
+
+
 import com.yousafdev.KidShield.Adapters.CallLogAdapter;
 import com.yousafdev.KidShield.Adapters.SmsLogAdapter;
 import com.yousafdev.KidShield.Models.CallLogEntry;
@@ -121,43 +121,36 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
 
     private void loadPendingCounts() {
         // 待审核任务数量
-        FirebaseDatabase.getInstance().getReference("missions").child(childUid)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        int pending = 0;
-                        for (DataSnapshot s : snapshot.getChildren()) {
+        // Firebase removed
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot s : snapshot.getChildren()) {
                             String status = s.child("status").getValue(String.class);
                             if ("pending".equals(status)) pending++;
                         }
                         missionCountView.setText("待审核: " + pending);
                     }
-                    @Override public void onCancelled(@NonNull DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {}
                 });
 
         // 待审核加时长申请数量
-        FirebaseDatabase.getInstance().getReference("time_requests").child(childUid)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        int pending = 0;
-                        for (DataSnapshot s : snapshot.getChildren()) {
+        // Firebase removed
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot s : snapshot.getChildren()) {
                             String status = s.child("status").getValue(String.class);
                             if ("pending".equals(status)) pending++;
                         }
                         timeRequestCountView.setText("待审核: " + pending);
                     }
-                    @Override public void onCancelled(@NonNull DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {}
                 });
     }
 
     private void showMissionApprovalDialog() {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("missions").child(childUid);
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Firebase removed
+/* Firebase removed */;
+// ⚠️ REMOVED FIREBASE: ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Mission> pendingMissions = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot s : snapshot.getChildren()) {
                     Mission m = s.getValue(Mission.class);
                     if (m != null && "pending".equals(m.status)) {
                         m.id = s.getKey();
@@ -184,7 +177,7 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                         })
                         .show();
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
 
@@ -206,28 +199,28 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
         builder.setPositiveButton("✅ 通过", (dialog, which) -> {
             String rewardStr = rewardInput.getText().toString().trim();
             int reward = rewardStr.isEmpty() ? 0 : Integer.parseInt(rewardStr);
-            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("missions")
-                    .child(childUid).child(mission.id);
-            ref.child("status").setValue("approved");
+            // Firebase removed
+// Firebase removed
+ref.child("status").setValue("approved");
             ref.child("rewardMinutes").setValue(reward);
             Toast.makeText(this, "✅ 任务已通过，奖励 " + reward + " 分钟", Toast.LENGTH_SHORT).show();
         });
         builder.setNegativeButton("❌ 驳回", (dialog, which) -> {
-            FirebaseDatabase.getInstance().getReference("missions")
-                    .child(childUid).child(mission.id).child("status").setValue("rejected");
-            Toast.makeText(this, "❌ 任务已驳回", Toast.LENGTH_SHORT).show();
+            // Firebase removed
+Toast.makeText(this, "❌ 任务已驳回", Toast.LENGTH_SHORT).show();
         });
         builder.setNeutralButton("取消", null);
         builder.show();
     }
 
     private void showTimeRequestApprovalDialog() {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("time_requests").child(childUid);
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Firebase removed
+/* Firebase removed */;
+// ⚠️ REMOVED FIREBASE: ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<TimeRequest> pendingRequests = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot s : snapshot.getChildren()) {
                     TimeRequest r = s.getValue(TimeRequest.class);
                     if (r != null && "pending".equals(r.status)) {
                         r.id = s.getKey();
@@ -257,7 +250,7 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                         })
                         .show();
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
 
@@ -268,33 +261,31 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                         (request.reason != null ? request.reason : "无"));
 
         builder.setPositiveButton("✅ 通过", (dialog, which) -> {
-            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("time_requests")
-                    .child(childUid).child(request.id);
-            ref.child("status").setValue("approved");
+            // Firebase removed
+// Firebase removed
+ref.child("status").setValue("approved");
 
             // 将额外时长写入白名单临时放行节点
             if (request.packageName != null) {
                 long extraTime = (long) request.requestedMinutes * 60 * 1000 + System.currentTimeMillis();
-                FirebaseDatabase.getInstance().getReference("users").child(childUid)
-                        .child("temporary_allowed").child(request.packageName.replace(".", "_"))
-                        .setValue(extraTime);
-            }
+                // Firebase removed
+}
             Toast.makeText(this, "✅ 加时长申请已通过", Toast.LENGTH_SHORT).show();
         });
         builder.setNegativeButton("❌ 驳回", (dialog, which) -> {
-            FirebaseDatabase.getInstance().getReference("time_requests")
-                    .child(childUid).child(request.id).child("status").setValue("rejected");
-            Toast.makeText(this, "❌ 申请已驳回", Toast.LENGTH_SHORT).show();
+            // Firebase removed
+Toast.makeText(this, "❌ 申请已驳回", Toast.LENGTH_SHORT).show();
         });
         builder.setNeutralButton("取消", null);
         builder.show();
     }
 
     private void listenForDataChanges() {
-        DatabaseReference childDataRef = FirebaseDatabase.getInstance().getReference("users").child(childUid).child("data");
-        childDataRef.child("location").addValueEventListener(new ValueEventListener() {
+        // Firebase removed
+/* Firebase removed */;
+// ⚠️ REMOVED FIREBASE: childDataRef.child("location").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists() && googleMap != null) {
                     Double lat = snapshot.child("latitude").getValue(Double.class);
                     Double lon = snapshot.child("longitude").getValue(Double.class);
@@ -307,35 +298,35 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                 }
                 progressBar.setVisibility(View.GONE);
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {}
         });
 
-        childDataRef.child("call_logs").addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: childDataRef.child("call_logs").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                 callLogList.clear();
-                for (DataSnapshot logSnapshot : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot logSnapshot : snapshot.getChildren()) {
                     CallLogEntry entry = logSnapshot.getValue(CallLogEntry.class);
                     if (entry != null) callLogList.add(entry);
                 }
                 Collections.reverse(callLogList);
                 callLogAdapter.notifyDataSetChanged();
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {}
         });
 
-        childDataRef.child("sms_logs").addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: childDataRef.child("sms_logs").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                 smsLogList.clear();
-                for (DataSnapshot logSnapshot : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot logSnapshot : snapshot.getChildren()) {
                     SmsLogEntry entry = logSnapshot.getValue(SmsLogEntry.class);
                     if (entry != null) smsLogList.add(entry);
                 }
                 Collections.reverse(smsLogList);
                 smsLogAdapter.notifyDataSetChanged();
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
 
@@ -376,17 +367,12 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                 }
             }
 
-            String missionId = FirebaseDatabase.getInstance().getReference("missions")
-                    .child(childUid).push().getKey();
-            if (missionId == null) return;
+            String missionId = // Firebase removed
+if (missionId == null) return;
 
             Mission mission = new Mission(missionId, title, desc, reward, "parent_assign");
-            FirebaseDatabase.getInstance().getReference("missions")
-                    .child(childUid).child(missionId)
-                    .setValue(mission)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "任务已布置给孩子", Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
+            // Firebase removed
+dialog.dismiss();
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(this, "布置失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();

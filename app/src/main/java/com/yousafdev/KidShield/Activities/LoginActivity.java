@@ -1,6 +1,8 @@
 package com.yousafdev.KidShield.Activities;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -8,23 +10,18 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Button;
 import android.app.AlertDialog;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.yousafdev.KidShield.Network.ApiClient;
+import com.yousafdev.KidShield.Network.PolicySyncService;
 import com.yousafdev.KidShield.R;
+
+import org.json.JSONObject;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -32,25 +29,27 @@ public class LoginActivity extends AppCompatActivity {
     private Button buttonLogin;
     private TextView textViewRegisterPrompt;
     private ProgressBar progressBar;
-    private FirebaseAuth mAuth;
-    private boolean firebaseTimeout = false;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        mAuth = FirebaseAuth.getInstance();
+
+        prefs = getSharedPreferences("kidshield", Context.MODE_PRIVATE);
+
         editTextEmail = findViewById(R.id.editText_email);
         editTextPassword = findViewById(R.id.editText_password);
         buttonLogin = findViewById(R.id.button_login);
         textViewRegisterPrompt = findViewById(R.id.textView_register_prompt);
         progressBar = findViewById(R.id.progressBar);
+
         buttonLogin.setOnClickListener(v -> loginUser());
         textViewRegisterPrompt.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
 
-        // 添加"跳过登录"按钮 - 解决国内网络连不上 Firebase 的问题
+        // 添加"跳过登录"按钮 - 离线Demo模式
         Button skipBtn = new Button(this);
         skipBtn.setText("跳过登录 · 离线Demo模式");
         skipBtn.setTextSize(14);
@@ -59,7 +58,6 @@ public class LoginActivity extends AppCompatActivity {
         skipBtn.setTextColor(0xFFB0BEC5);
         skipBtn.setOnClickListener(v -> {
             progressBar.setVisibility(View.VISIBLE);
-            // 直接进入孩子端主界面用于测试
             Intent intent = new Intent(LoginActivity.this, ChildDashboardActivity.class);
             intent.putExtra("OFFLINE_MODE", true);
             startActivity(intent);
@@ -98,10 +96,13 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
+        // 检查是否已登录（有保存的token）
+        String savedToken = prefs.getString("auth_token", null);
+        String savedRole = prefs.getString("user_role", null);
+        if (savedToken != null && savedRole != null) {
             progressBar.setVisibility(View.VISIBLE);
-            checkUserRoleAndNavigate(currentUser.getUid());
+            ApiClient.getInstance().setToken(savedToken);
+            navigateByRole(savedRole);
         }
     }
 
@@ -117,48 +118,58 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
         progressBar.setVisibility(View.VISIBLE);
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        checkUserRoleAndNavigate(task.getResult().getUser().getUid());
+
+        new Thread(() -> {
+            try {
+                JSONObject result = ApiClient.getInstance().login(email, password);
+                String token = result.getString("token");
+                JSONObject user = result.getJSONObject("user");
+                String role = user.getString("role");
+                String id = user.getString("id");
+
+                // 保存登录信息
+                prefs.edit()
+                    .putString("auth_token", token)
+                    .putString("user_role", role)
+                    .putString("user_id", id)
+                    .putString("user_email", email)
+                    .apply();
+
+                runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(LoginActivity.this, "✅ 登录成功", Toast.LENGTH_SHORT).show();
+                    // 启动策略同步服务（孩子端自动拉取家长指令）
+                    PolicySyncService.start(LoginActivity.this);
+                    navigateByRole(role);
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    String msg = e.getMessage();
+                    if (msg != null && msg.contains("401")) {
+                        Toast.makeText(LoginActivity.this, "邮箱或密码错误", Toast.LENGTH_LONG).show();
+                    } else if (msg != null && msg.contains("Failed to connect")) {
+                        Toast.makeText(LoginActivity.this, "网络连接失败，请检查网络", Toast.LENGTH_LONG).show();
                     } else {
-                        progressBar.setVisibility(View.GONE);
-                        Toast.makeText(LoginActivity.this, "登录失败：" + task.getException().getMessage(),
+                        Toast.makeText(LoginActivity.this, "登录失败：" + (msg != null ? msg : "未知错误"),
                                 Toast.LENGTH_LONG).show();
                     }
                 });
+            }
+        }).start();
     }
 
-    private void checkUserRoleAndNavigate(String uid) {
-        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(uid);
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                progressBar.setVisibility(View.GONE);
-                if (snapshot.exists()) {
-                    String role = snapshot.child("role").getValue(String.class);
-                    Intent intent;
-                    if ("child".equals(role)) {
-                        intent = new Intent(LoginActivity.this, ChildSetupActivity.class);
-                    } else if ("parent".equals(role)) {
-                        intent = new Intent(LoginActivity.this, ParentDashboardActivity.class);
-                    } else {
-                        Toast.makeText(LoginActivity.this, "未知的用户角色", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Toast.makeText(LoginActivity.this, "未找到用户数据，请重新注册", Toast.LENGTH_SHORT).show();
-                    mAuth.signOut();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(LoginActivity.this, "数据库错误：" + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void navigateByRole(String role) {
+        Intent intent;
+        if ("child".equals(role)) {
+            intent = new Intent(LoginActivity.this, ChildSetupActivity.class);
+        } else if ("parent".equals(role)) {
+            intent = new Intent(LoginActivity.this, ParentDashboardActivity.class);
+        } else {
+            Toast.makeText(LoginActivity.this, "未知的用户角色", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        startActivity(intent);
+        finish();
     }
 }

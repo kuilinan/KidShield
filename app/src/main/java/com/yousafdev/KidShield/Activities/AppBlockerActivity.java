@@ -14,11 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+
+
+
+
 import com.yousafdev.KidShield.Adapters.AppBlockerAdapter;
 import com.yousafdev.KidShield.Models.AppInfo;
 import com.yousafdev.KidShield.R;
@@ -37,7 +37,7 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
     private ProgressBar progressBar;
     private EditText searchEditText;
     private TextView modeDescription;
-    private DatabaseReference childRef;
+// ⚠️ REMOVED FIREBASE: private DatabaseReference childRef;
     private String childUid;
 
     @Override
@@ -52,7 +52,7 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
             return;
         }
 
-        childRef = FirebaseDatabase.getInstance().getReference("users").child(childUid);
+        childRef = ; // 改用CommandStore
         progressBar = findViewById(R.id.progressBar_apps);
         recyclerView = findViewById(R.id.recyclerView_apps);
         searchEditText = findViewById(R.id.editText_search);
@@ -95,18 +95,18 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
         progressBar.setVisibility(View.VISIBLE);
 
         // 先加载白名单状态
-        childRef.child("whitelist_apps").addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: childRef.child("whitelist_apps").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                 whitelistStatusMap.clear();
-                for (DataSnapshot statusSnapshot : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot statusSnapshot : snapshot.getChildren()) {
                     String pkg = statusSnapshot.getKey().replace("_", ".");
                     Boolean val = statusSnapshot.getValue(Boolean.class);
                     whitelistStatusMap.put(pkg, val != null && val);
                 }
                 loadInstalledApps();
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {
                 progressBar.setVisibility(View.GONE);
                 Toast.makeText(AppBlockerActivity.this, "加载状态失败", Toast.LENGTH_SHORT).show();
             }
@@ -114,11 +114,11 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
     }
 
     private void loadInstalledApps() {
-        childRef.child("installed_apps").addListenerForSingleValueEvent(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: childRef.child("installed_apps").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                 fullAppList.clear();
-                for (DataSnapshot appSnapshot : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot appSnapshot : snapshot.getChildren()) {
                     String appName = appSnapshot.child("appName").getValue(String.class);
                     String packageName = appSnapshot.child("packageName").getValue(String.class);
                     Boolean isSystem = appSnapshot.child("isSystemApp").getValue(Boolean.class);
@@ -135,7 +135,7 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
                 adapter.filterList(fullAppList);
                 progressBar.setVisibility(View.GONE);
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {
                 progressBar.setVisibility(View.GONE);
                 Toast.makeText(AppBlockerActivity.this, "加载应用列表失败", Toast.LENGTH_SHORT).show();
             }

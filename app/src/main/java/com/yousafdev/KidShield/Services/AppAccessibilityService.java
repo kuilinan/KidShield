@@ -17,11 +17,6 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.yousafdev.KidShield.Activities.BlockedScreenActivity;
 
 import java.util.Calendar;
@@ -33,20 +28,21 @@ public class AppAccessibilityService extends AccessibilityService {
     public static final String ACTION_FOREGROUND_APP = "com.yousafdev.KidShield.ACTION_FOREGROUND_APP";
     public static final String EXTRA_PACKAGE_NAME = "packageName";
 
-    private DatabaseReference mDatabase;
+    private CommandStore commandStore;
     private String currentChildUid;
     private Set<String> whitelistApps = new HashSet<>();
     private Set<String> systemApps = new HashSet<>();
     private boolean whitelistMode = true;
     private boolean devModeBlocked = false;
-    private ValueEventListener whitelistListener;
+// ⚠️ REMOVED FIREBASE: private ValueEventListener whitelistListener;
     private String lastBlockedPackage = "";
     private long lastBlockedTime = 0;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        commandStore = new CommandStore(this);
+        // 改用本地文件存储的策略
 
         // 加载系统应用列表
         loadSystemApps();
@@ -71,11 +67,11 @@ public class AppAccessibilityService extends AccessibilityService {
     }
 
     private void detectCurrentUser() {
-        // 从Firebase读取当前设备绑定的孩子UID
-        DatabaseReference deviceRef = mDatabase.child("devices").child(Build.SERIAL != null ? Build.SERIAL : "unknown");
-        deviceRef.child("childUid").addListenerForSingleValueEvent(new ValueEventListener() {
+        // 从本地存储读取策略（家长通过指令同步存储到文件）
+        // 设备绑定的孩子UID由登录时保存
+// ⚠️ REMOVED FIREBASE: deviceRef.child("childUid").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                 String uid = snapshot.getValue(String.class);
                 if (uid != null) {
                     currentChildUid = uid;
@@ -83,7 +79,7 @@ public class AppAccessibilityService extends AccessibilityService {
                     startListeningForDevMode();
                 }
             }
-            @Override public void onCancelled(DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
         });
     }
 
@@ -92,22 +88,22 @@ public class AppAccessibilityService extends AccessibilityService {
 
         // 监听白名单模式开关
         mDatabase.child("users").child(currentChildUid).child("settings").child("whitelistMode")
-                .addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                         whitelistMode = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
                         Log.d(TAG, "白名单模式: " + whitelistMode);
                     }
-                    @Override public void onCancelled(DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
                 });
 
         // 监听白名单应用
         whitelistListener = mDatabase.child("users").child(currentChildUid).child("whitelist_apps")
-                .addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                         whitelistApps.clear();
-                        for (DataSnapshot appSnapshot : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot appSnapshot : snapshot.getChildren()) {
                             Boolean allowed = appSnapshot.getValue(Boolean.class);
                             if (allowed != null && allowed) {
                                 String pkg = appSnapshot.getKey().replace("_", ".");
@@ -116,23 +112,23 @@ public class AppAccessibilityService extends AccessibilityService {
                         }
                         Log.d(TAG, "白名单更新: " + whitelistApps.size() + " 个应用");
                     }
-                    @Override public void onCancelled(DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
                 });
     }
 
     private void startListeningForDevMode() {
         if (currentChildUid == null) return;
         mDatabase.child("users").child(currentChildUid).child("settings").child("blockDeveloperMode")
-                .addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                         devModeBlocked = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
                         Log.d(TAG, "开发者模式封锁: " + devModeBlocked);
                         if (devModeBlocked) {
                             enforceDevModeBlock();
                         }
                     }
-                    @Override public void onCancelled(DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
                 });
     }
 
@@ -233,7 +229,7 @@ public class AppAccessibilityService extends AccessibilityService {
         public void onReceive(Context context, Intent intent) {
             if ("com.yousafdev.KidShield.UPDATE_WHITELIST".equals(intent.getAction())) {
                 if (whitelistListener != null && currentChildUid != null) {
-                    mDatabase.child("users").child(currentChildUid).child("whitelist_apps")
+                    // 从本地CommandStore读取
                             .removeEventListener(whitelistListener);
                 }
                 detectCurrentUser();

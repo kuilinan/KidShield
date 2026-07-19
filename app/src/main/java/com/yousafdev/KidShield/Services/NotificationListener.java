@@ -7,9 +7,6 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,15 +16,15 @@ import java.util.Map;
 
 public class NotificationListener extends NotificationListenerService {
     private static final String TAG = "NotificationListener";
-    private DatabaseReference mDatabase;
+// ⚠️ REMOVED FIREBASE: private DatabaseReference mDatabase;
     private String currentUid;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        mDatabase = null; // Firebase移除
+        String savedUid = getSharedPreferences("kidshield", MODE_PRIVATE).getString("user_id", null); if (savedUid != null) {
+            currentUid = savedUid;
         }
         Log.d(TAG, "通知监听服务已启动");
     }

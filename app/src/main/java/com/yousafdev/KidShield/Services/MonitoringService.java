@@ -15,12 +15,12 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+
+
+
+
+
 import com.yousafdev.KidShield.R;
 
 public class MonitoringService extends Service {
@@ -29,7 +29,7 @@ public class MonitoringService extends Service {
     private static final String CHANNEL_ID = "KidShieldMonitor";
     public static final String ACTION_SYNC_DATA = "com.yousafdev.KidShield.ACTION_SYNC_DATA";
 
-    private DatabaseReference mDatabase;
+// ⚠️ REMOVED FIREBASE: private DatabaseReference mDatabase;
     private String currentUid;
     private boolean devModeBlocked = false;
     private Handler handler;
@@ -38,14 +38,14 @@ public class MonitoringService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        // 移除Firebase
         handler = new Handler(Looper.getMainLooper());
 
         createNotificationChannel();
 
         // 获取当前用户
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        // 移除Firebase
+            currentUid = /* Firebase removed */;
             listenForDevModeSetting();
             startDevModeGuard();
         }
@@ -79,12 +79,12 @@ public class MonitoringService extends Service {
     private void listenForDevModeSetting() {
         if (currentUid == null) return;
         mDatabase.child("users").child(currentUid).child("settings").child("blockDeveloperMode")
-                .addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                         devModeBlocked = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
                     }
-                    @Override public void onCancelled(DatabaseError error) {}
+// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
                 });
     }
 

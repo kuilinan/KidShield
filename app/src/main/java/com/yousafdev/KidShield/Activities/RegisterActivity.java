@@ -15,11 +15,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.yousafdev.KidShield.Network.ApiClient;
+import org.json.JSONObject;
 import com.yousafdev.KidShield.R;
+import com.yousafdev.KidShield.Network.ApiClient;
 
 import java.util.HashMap;
 
@@ -32,17 +31,13 @@ public class RegisterActivity extends AppCompatActivity {
     private RadioGroup radioGroupRole;
     private ProgressBar progressBar;
 
-    private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Initialize Firebase Auth and Database
-        mAuth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        // 使用自建 API
 
         // Initialize UI components
         editTextEmail = findViewById(R.id.editText_email_register);
@@ -109,7 +104,7 @@ public class RegisterActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, task -> {
                     progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
-                        FirebaseUser firebaseUser = mAuth.getCurrentUser();
+// ⚠️ REMOVED FIREBASE: FirebaseUser firebaseUser = mAuth.getCurrentUser();
                         if (firebaseUser != null) {
                             String userId = firebaseUser.getUid();
                             RadioButton selectedRadioButton = findViewById(selectedRoleId);

@@ -28,12 +28,12 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+
+
+
+
+
 import com.yousafdev.KidShield.Models.Mission;
 import com.yousafdev.KidShield.R;
 import com.yousafdev.KidShield.Utils.UsageTracker;
@@ -60,7 +60,7 @@ public class ChildDashboardActivity extends AppCompatActivity {
     private View locationWarning;
     private TextView textViewLocationStatus;
 
-    private DatabaseReference mDatabase;
+    // 改用 CommandStore 本地读取
     private String currentUid;
     private UsageTracker usageTracker;
     private Handler handler;
@@ -75,12 +75,12 @@ public class ChildDashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_child_dashboard);
 
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        // 本地策略
         usageTracker = new UsageTracker(this);
         handler = new Handler(Looper.getMainLooper());
         
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        // 改用本地token判断
+            currentUid = getSharedPreferences("kidshield", MODE_PRIVATE).getString("user_id", "");
         }
 
         initViews();
@@ -209,12 +209,11 @@ public class ChildDashboardActivity extends AppCompatActivity {
         
         progressBar.setVisibility(View.VISIBLE);
         
-        mDatabase.child("missions").child(currentUid)
-                .addValueEventListener(new ValueEventListener() {
+        // 从本地CommandStore读取任务
                     @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
                         missionList.clear();
-                        for (DataSnapshot missionSnap : snapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot missionSnap : snapshot.getChildren()) {
                             Mission mission = missionSnap.getValue(Mission.class);
                             if (mission != null) {
                                 mission.id = missionSnap.getKey();
@@ -234,7 +233,7 @@ public class ChildDashboardActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
+// ⚠️ REMOVED FIREBASE: public void onCancelled(@NonNull DatabaseError error) {
                         progressBar.setVisibility(View.GONE);
                         Log.e(TAG, "加载任务失败", error.toException());
                     }

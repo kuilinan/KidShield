@@ -11,14 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 import com.yousafdev.KidShield.Adapters.ChildAdapter;
 import com.yousafdev.KidShield.Models.Child;
 import com.yousafdev.KidShield.R;
@@ -33,8 +25,8 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
     private List<Child> childList;
     private ProgressBar progressBar;
 
-    private DatabaseReference databaseReference;
-    private FirebaseUser currentUser;
+// ⚠️ REMOVED FIREBASE: private DatabaseReference databaseReference;
+// ⚠️ REMOVED FIREBASE: private FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +36,7 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
         recyclerView = findViewById(R.id.recyclerView_children);
         progressBar = findViewById(R.id.progressBar_dashboard);
 
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference("users");
+        // 使用自建 API
 
         childList = new ArrayList<>();
         adapter = new ChildAdapter(childList, this);
@@ -62,11 +53,11 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
         Query query = databaseReference.orderByChild("parentEmail").equalTo(currentUser.getEmail());
 
-        query.addValueEventListener(new ValueEventListener() {
+// ⚠️ REMOVED FIREBASE: query.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 childList.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+// ⚠️ REMOVED FIREBASE: for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String uid = snapshot.getKey();
                     String email = snapshot.child("email").getValue(String.class);
                     if (email != null && uid != null) {
@@ -78,7 +69,7 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+// ⚠️ REMOVED FIREBASE: public void onCancelled(@NonNull DatabaseError databaseError) {
                 Toast.makeText(ParentDashboardActivity.this, "加载孩子列表失败：" + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                 progressBar.setVisibility(View.GONE);
             }
