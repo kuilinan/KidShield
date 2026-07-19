@@ -156,3 +156,43 @@
     <string name="whitelist_mode">白名单模式</string>
     <string name="whitelist_mode_desc">开启后仅系统应用和家长选定的应用可用</string>
 </resources>
+
+    <!-- 温馨守护横幅 -->
+    <string name="parent_guardian_banner">👨‍👩‍👧‍👦 你的家长正在为你远程守护</string>
+    <string name="parent_guardian_banner_sub">努力学习，健康成长 ❤️</string>
+    
+    <!-- 家长布置任务 -->
+    <string name="assign_missions">布置任务</string>
+    <string name="assign_new_mission">布置新任务</string>
+    <string name="mission_from_parent">家长布置的任务</string>
+    <string name="mission_mark_done">标记完成</string>
+    <string name="mission_mark_done_confirm">确认完成任务？需要家长审核通过后才能获得奖励哦</string>
+    <string name="mission_pending_approval">待家长确认</string>
+    <string name="no_assigned_missions">暂无家长布置的任务</string>
+    <string name="mission_assigned_hint">输入任务内容和奖励时长（分钟），布置给孩子的任务</string>
+    <string name="mission_type_hint">任务类型</string>
+    <string name="child_submitted">孩子提交的</string>
+    <string name="parent_assigned">家长布置的</string>
+    
+    <!-- 使用时间统计 -->
+    <string name="usage_stats">使用时间统计</string>
+    <string name="screen_time_title">屏幕使用时间</string>
+    <string name="today_usage">今日使用</string>
+    <string name="app_usage_time">应用使用时间</string>
+    <string name="no_usage_data">暂无使用数据，请开启使用权限</string>
+    <string name="enable_usage_permission">开启使用权限</string>
+    <string name="usage_permission_hint">需要开启「使用权限」才能统计各应用的使用时间</string>
+    <string name="total_screen_time">总屏幕时间</string>
+    <string name="minutes_format">%d分钟</string>
+    <string name="hours_minutes_format">%d小时%d分钟</string>
+    
+    <!-- 定位权限守护 -->
+    <string name="location_permission_required">位置权限必须保持开启</string>
+    <string name="location_permission_warning">检测到位置权限被关闭，为了你的安全，请重新开启位置权限</string>
+    <string name="location_disabled_alert">⚠️ 定位权限已关闭！应用将重新启动以恢复保护</string>
+    
+    <!-- 自启动引导 -->
+    <string name="enable_autostart">开启自启动</string>
+    <string name="autostart_hint">开启自启动后，即使手机重启也能自动保护你哦</string>
+    <string name="go_to_autostart">去开启自启动</string>
+    <string name="location_protected">位置保护已开启 ✅</string>

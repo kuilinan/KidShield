@@ -45,7 +45,7 @@ class PermissionViewHolder {
     void setGranted() {
         statusIcon.setImageResource(R.drawable.ic_check);
         statusIcon.setColorFilter(ContextCompat.getColor(layout.getContext(), R.color.kidshield_blue_primary));
-        enableButton.setText("Enabled");
+        enableButton.setText("已开启");
         enableButton.setEnabled(false);
     }
 }
@@ -94,15 +94,15 @@ public class ChildSetupActivity extends AppCompatActivity {
         accessibility = new PermissionViewHolder(findViewById(R.id.permission_accessibility));
         finishButton = findViewById(R.id.button_finish_setup);
 
-        admin.title.setText("Device Administrator (for Screen Lock)");
-        usage.title.setText("Usage Access (for App Blocking)");
-        overlay.title.setText("Draw Over Apps (for Lock Screen)");
-        location.title.setText("Location Access (for Tracking)");
-        call.title.setText("Call Log Access (for Monitoring)");
-        sms.title.setText("SMS Access (for Monitoring)");
-        notifications.title.setText("Notifications (for Service Stability)");
-        battery.title.setText("Disable Battery Optimization");
-        accessibility.title.setText("Accessibility Service (for Faster App Monitoring)");
+        admin.title.setText("设备管理员（用于锁定屏幕）");
+        usage.title.setText("使用情况访问（用于应用封锁）");
+        overlay.title.setText("悬浮窗权限（用于锁屏）");
+        location.title.setText("位置权限（用于定位追踪）");
+        call.title.setText("通话记录（用于监控）");
+        sms.title.setText("短信记录（用于监控）");
+        notifications.title.setText("通知权限（保证服务稳定）");
+        battery.title.setText("关闭电池优化");
+        accessibility.title.setText("无障碍服务（用于应用监控）");
     }
 
     private void setupClickListeners() {
@@ -165,7 +165,7 @@ public class ChildSetupActivity extends AppCompatActivity {
     private void requestDeviceAdmin() {
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, compName);
-        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "This permission is required to remotely lock the device.");
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "需要此权限才能远程锁定设备");
         requestSettingLauncher.launch(intent);
     }
 

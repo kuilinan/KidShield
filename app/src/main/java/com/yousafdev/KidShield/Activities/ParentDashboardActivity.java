@@ -79,7 +79,7 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(ParentDashboardActivity.this, "Failed to load children: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ParentDashboardActivity.this, "加载孩子列表失败：" + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                 progressBar.setVisibility(View.GONE);
             }
         });

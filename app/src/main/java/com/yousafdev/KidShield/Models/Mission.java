@@ -1,37 +1,47 @@
 package com.yousafdev.KidShield.Models;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Mission {
     public String id;
     public String title;
     public String description;
     public int rewardMinutes;
-    public String status; // "pending", "approved", "rejected"
-    public long createdAt;
-    public String childUid;
-    public String completedAt;
+    public String status; // pending / approved / rejected
+    public String type; // "child_submit" 孩子提交 / "parent_assign" 家长布置
+    public long timestamp;
 
-    public Mission() {}
+    public Mission() {
+        // 默认构造函数（Firebase反序列化用）
+    }
 
-    public Mission(String title, String description, int rewardMinutes, String childUid) {
+    public Mission(String id, String title, String description, int rewardMinutes) {
+        this.id = id;
         this.title = title;
         this.description = description;
         this.rewardMinutes = rewardMinutes;
         this.status = "pending";
-        this.createdAt = System.currentTimeMillis();
-        this.childUid = childUid;
+        this.type = "child_submit";
+        this.timestamp = System.currentTimeMillis();
     }
 
-    public Map<String, Object> toMap() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("title", title);
-        map.put("description", description);
-        map.put("rewardMinutes", rewardMinutes);
-        map.put("status", status);
-        map.put("createdAt", createdAt);
-        map.put("childUid", childUid);
-        return map;
+    public Mission(String id, String title, String description, int rewardMinutes, String type) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.rewardMinutes = rewardMinutes;
+        this.status = "pending";
+        this.type = type;
+        this.timestamp = System.currentTimeMillis();
+    }
+
+    public boolean isApproved() {
+        return "approved".equals(status);
+    }
+
+    public boolean isRejected() {
+        return "rejected".equals(status);
+    }
+
+    public boolean isPending() {
+        return "pending".equals(status);
     }
 }

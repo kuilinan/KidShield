@@ -81,23 +81,23 @@ public class RegisterActivity extends AppCompatActivity {
 
         // --- Input Validation ---
         if (TextUtils.isEmpty(email)) {
-            Toast.makeText(this, "Please enter an email", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请输入邮箱地址", Toast.LENGTH_SHORT).show();
             return;
         }
         if (TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Please enter a password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请输入密码", Toast.LENGTH_SHORT).show();
             return;
         }
         if (password.length() < 6) {
-            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "密码至少需要6个字符", Toast.LENGTH_SHORT).show();
             return;
         }
         if (selectedRoleId == -1) {
-            Toast.makeText(this, "Please select a role (Parent/Child)", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请选择身份（家长/孩子）", Toast.LENGTH_SHORT).show();
             return;
         }
         if (selectedRoleId == R.id.radioButton_child && TextUtils.isEmpty(parentEmail)) {
-            Toast.makeText(this, "Please enter your parent's email", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请输入家长邮箱地址", Toast.LENGTH_SHORT).show();
             return;
         }
         // --- End Validation ---
@@ -129,19 +129,19 @@ public class RegisterActivity extends AppCompatActivity {
                             mDatabase.child("users").child(userId).setValue(userMap)
                                     .addOnCompleteListener(dbTask -> {
                                         if (dbTask.isSuccessful()) {
-                                            Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(RegisterActivity.this, "注册成功！", Toast.LENGTH_SHORT).show();
                                             // Send user to Login screen after successful registration
                                             startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                                             finish();
                                         } else {
                                             // Handle database write error
-                                            Toast.makeText(RegisterActivity.this, "Database Error: " + dbTask.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                            Toast.makeText(RegisterActivity.this, "数据库错误：" + dbTask.getException().getMessage(), Toast.LENGTH_LONG).show();
                                         }
                                     });
                         }
                     } else {
                         // Handle registration failure
-                        Toast.makeText(RegisterActivity.this, "Registration Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(RegisterActivity.this, "注册失败：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }

@@ -60,11 +60,11 @@ public class LoginActivity extends AppCompatActivity {
         String email = editTextEmail.getText().toString().trim();
         String password = editTextPassword.getText().toString().trim();
         if (TextUtils.isEmpty(email)) {
-            Toast.makeText(this, "Please enter an email", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请输入邮箱地址", Toast.LENGTH_SHORT).show();
             return;
         }
         if (TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Please enter a password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请输入密码", Toast.LENGTH_SHORT).show();
             return;
         }
         progressBar.setVisibility(View.VISIBLE);
@@ -74,7 +74,7 @@ public class LoginActivity extends AppCompatActivity {
                         checkUserRoleAndNavigate(task.getResult().getUser().getUid());
                     } else {
                         progressBar.setVisibility(View.GONE);
-                        Toast.makeText(LoginActivity.this, "Authentication failed: " + task.getException().getMessage(),
+                        Toast.makeText(LoginActivity.this, "登录失败：" + task.getException().getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
                 });
@@ -94,13 +94,13 @@ public class LoginActivity extends AppCompatActivity {
                     } else if ("parent".equals(role)) {
                         intent = new Intent(LoginActivity.this, ParentDashboardActivity.class);
                     } else {
-                        Toast.makeText(LoginActivity.this, "Unknown user role.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, "未知的用户角色", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(LoginActivity.this, "User data not found. Please register again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "未找到用户数据，请重新注册", Toast.LENGTH_SHORT).show();
                     mAuth.signOut();
                 }
             }
@@ -108,7 +108,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(LoginActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "数据库错误：" + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
