@@ -142,8 +142,7 @@
         <service
             android:name=".Services.NotificationListener"
             android:exported="true"
-            android:label="通知监听"
-            android:exported="true">
+            android:label="通知监听">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
