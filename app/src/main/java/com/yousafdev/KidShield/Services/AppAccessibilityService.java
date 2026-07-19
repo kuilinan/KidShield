@@ -2,15 +2,12 @@ package com.yousafdev.KidShield.Services;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
-import android.os.Build;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityEvent;
 import android.util.Log;
@@ -18,9 +15,11 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.yousafdev.KidShield.Activities.BlockedScreenActivity;
+import com.yousafdev.KidShield.Network.CommandStore;
 
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class AppAccessibilityService extends AccessibilityService {
@@ -30,12 +29,9 @@ public class AppAccessibilityService extends AccessibilityService {
 
     private CommandStore commandStore;
     private String currentChildUid;
-    private java.util.List<String> whitelistApps = new java.util.ArrayList<>();
-    private boolean whitelistMode = false;
-    private boolean blockDeveloperMode = false;
     private Set<String> whitelistApps = new HashSet<>();
     private Set<String> systemApps = new HashSet<>();
-    private boolean whitelistMode = true;
+    private boolean whitelistMode = false;
     private boolean devModeBlocked = false;
     private String lastBlockedPackage = "";
     private long lastBlockedTime = 0;
@@ -44,22 +40,22 @@ public class AppAccessibilityService extends AccessibilityService {
     public void onCreate() {
         super.onCreate();
         commandStore = new CommandStore(this);
-        // 改用本地文件存储的策略
+        Log.d(TAG, "AppAccessibilityService 创建，使用本地 CommandStore");
 
         // 加载系统应用列表
         loadSystemApps();
 
-        // 监听当前用户UID
-        detectCurrentUser();
+        // 读取本地存储的策略
+        loadPoliciesFromStore();
 
-        // 注册广播接收器
+        // 注册广播接收器（用于策略更新通知）
         IntentFilter filter = new IntentFilter("com.yousafdev.KidShield.UPDATE_WHITELIST");
         registerReceiver(updateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
     }
 
     private void loadSystemApps() {
         PackageManager pm = getPackageManager();
-        java.util.List<android.content.pm.PackageInfo> packages = pm.getInstalledPackages(0);
+        List<android.content.pm.PackageInfo> packages = pm.getInstalledPackages(0);
         for (android.content.pm.PackageInfo pkg : packages) {
             if ((pkg.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
                 systemApps.add(pkg.packageName);
@@ -68,66 +64,32 @@ public class AppAccessibilityService extends AccessibilityService {
         Log.d(TAG, "加载了 " + systemApps.size() + " 个系统应用");
     }
 
-    private void detectCurrentUser() {
-        // 从本地存储读取策略（家长通过指令同步存储到文件）
-        // 设备绑定的孩子UID由登录时保存
-            @Override
-                String uid = snapshot.getValue(String.class);
-                if (uid != null) {
-                    currentChildUid = uid;
-                    startListeningForWhitelist();
-                    startListeningForDevMode();
-                }
-            }
-        });
-    }
+    private void loadPoliciesFromStore() {
+        // 从本地 CommandStore 读取当前策略
+        // 白名单模式
+        whitelistMode = commandStore.getWhitelistMode();
+        Log.d(TAG, "白名单模式: " + whitelistMode);
 
-    private void startListeningForWhitelist() {
-        if (currentChildUid == null) return;
+        // 白名单应用列表
+        List<String> storedWhitelist = commandStore.getWhitelistPackageNames();
+        whitelistApps.clear();
+        if (storedWhitelist != null) {
+            whitelistApps.addAll(storedWhitelist);
+        }
+        Log.d(TAG, "白名单应用: " + whitelistApps.size() + " 个");
 
-        // 监听白名单模式开关
-        mDatabase.child("users").child(currentChildUid).child("settings").child("whitelistMode")
-                    @Override
-                        whitelistMode = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
-                        Log.d(TAG, "白名单模式: " + whitelistMode);
-                    }
-                });
-
-        // 监听白名单应用
-        whitelistListener = mDatabase.child("users").child(currentChildUid).child("whitelist_apps")
-                    @Override
-                        whitelistApps.clear();
-                            Boolean allowed = appSnapshot.getValue(Boolean.class);
-                            if (allowed != null && allowed) {
-                                String pkg = appSnapshot.getKey().replace("_", ".");
-                                whitelistApps.add(pkg);
-                            }
-                        }
-                        Log.d(TAG, "白名单更新: " + whitelistApps.size() + " 个应用");
-                    }
-                });
-    }
-
-    private void startListeningForDevMode() {
-        if (currentChildUid == null) return;
-        mDatabase.child("users").child(currentChildUid).child("settings").child("blockDeveloperMode")
-                    @Override
-                        devModeBlocked = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
-                        Log.d(TAG, "开发者模式封锁: " + devModeBlocked);
-                        if (devModeBlocked) {
-                            enforceDevModeBlock();
-                        }
-                    }
-                });
+        // 开发者模式封锁
+        devModeBlocked = commandStore.isDevModeBlocked();
+        if (devModeBlocked) {
+            enforceDevModeBlock();
+        }
+        Log.d(TAG, "开发者模式封锁: " + devModeBlocked);
     }
 
     private void enforceDevModeBlock() {
         try {
-            // 关闭开发者选项
             Settings.Global.putInt(getContentResolver(), "development_settings_enabled", 0);
-            // 关闭USB调试
             Settings.Global.putInt(getContentResolver(), "adb_enabled", 0);
-            // 关闭无线调试
             Settings.Global.putInt(getContentResolver(), "adb_wifi_enabled", 0);
             Log.d(TAG, "开发者模式已强制关闭");
         } catch (Exception e) {
@@ -157,7 +119,7 @@ public class AppAccessibilityService extends AccessibilityService {
                 }
 
                 // 白名单检查
-                if (whitelistMode && currentChildUid != null) {
+                if (whitelistMode) {
                     if (!systemApps.contains(packageName) && !whitelistApps.contains(packageName)) {
                         blockApp(packageName, "此应用已被家长限制");
                     }
@@ -174,7 +136,6 @@ public class AppAccessibilityService extends AccessibilityService {
     }
 
     private void blockApp(String packageName, String reason) {
-        // 防止频繁弹窗
         long now = System.currentTimeMillis();
         if (packageName.equals(lastBlockedPackage) && (now - lastBlockedTime) < 3000) {
             return;
@@ -182,7 +143,7 @@ public class AppAccessibilityService extends AccessibilityService {
         lastBlockedPackage = packageName;
         lastBlockedTime = now;
 
-        // 回到桌面并弹出锁定提示
+        // 回到桌面
         Intent startMain = new Intent(Intent.ACTION_MAIN);
         startMain.addCategory(Intent.CATEGORY_HOME);
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -217,11 +178,8 @@ public class AppAccessibilityService extends AccessibilityService {
         @Override
         public void onReceive(Context context, Intent intent) {
             if ("com.yousafdev.KidShield.UPDATE_WHITELIST".equals(intent.getAction())) {
-                if (whitelistListener != null && currentChildUid != null) {
-                    // 从本地CommandStore读取
-                            .removeEventListener(whitelistListener);
-                }
-                detectCurrentUser();
+                Log.d(TAG, "收到策略更新广播，重新读取本地策略");
+                loadPoliciesFromStore();
             }
         }
     };
@@ -231,6 +189,8 @@ public class AppAccessibilityService extends AccessibilityService {
         super.onDestroy();
         try {
             unregisterReceiver(updateReceiver);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            // ignore
+        }
     }
 }
