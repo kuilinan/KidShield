@@ -80,9 +80,8 @@ public class ChildDashboardActivity extends AppCompatActivity {
         handler = new Handler(Looper.getMainLooper());
         
         // 改用本地token判断
-            currentUid = getSharedPreferences("kidshield", MODE_PRIVATE).getString("user_id", "");
-        }
-
+        currentUid = getSharedPreferences("kidshield", MODE_PRIVATE).getString("user_id", "");
+        Log.d(TAG, "当前用户UID: " + currentUid);
         initViews();
         setupListeners();
         loadMissions();
@@ -206,38 +205,39 @@ public class ChildDashboardActivity extends AppCompatActivity {
 
     private void loadMissions() {
         if (currentUid == null) return;
-        
-        progressBar.setVisibility(View.VISIBLE);
-        
-        // 从本地CommandStore读取任务
-                    @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        missionList.clear();
-// ⚠️ REMOVED FIREBASE: for (DataSnapshot missionSnap : snapshot.getChildren()) {
-                            Mission mission = missionSnap.getValue(Mission.class);
-                            if (mission != null) {
-                                mission.id = missionSnap.getKey();
-                                missionList.add(mission);
-                            }
-                        }
-                        missionAdapter.notifyDataSetChanged();
-                        progressBar.setVisibility(View.GONE);
-                        
-                        if (missionList.isEmpty()) {
-                            textViewNoMissions.setVisibility(View.VISIBLE);
-                            recyclerViewMissions.setVisibility(View.GONE);
-                        } else {
-                            textViewNoMissions.setVisibility(View.GONE);
-                            recyclerViewMissions.setVisibility(View.VISIBLE);
-                        }
-                    }
 
-                    @Override
-// ⚠️ REMOVED FIREBASE: public void onCancelled(@NonNull DatabaseError error) {
-                        progressBar.setVisibility(View.GONE);
-                        Log.e(TAG, "加载任务失败", error.toException());
-                    }
-                });
+        progressBar.setVisibility(View.VISIBLE);
+
+        // 从本地CommandStore读取任务
+        try {
+            org.json.JSONArray missions = commandStore.getMissions();
+            missionList.clear();
+
+            for (int i = 0; i < missions.length(); i++) {
+                org.json.JSONObject obj = missions.getJSONObject(i);
+                Mission mission = new Mission();
+                mission.id = obj.optString("id", "mission_" + i);
+                mission.title = obj.optString("title", "");
+                mission.description = obj.optString("description", "");
+                mission.reward = obj.optInt("reward", 0);
+                mission.status = obj.optString("status", "");
+                missionList.add(mission);
+            }
+
+            missionAdapter.notifyDataSetChanged();
+            progressBar.setVisibility(View.GONE);
+
+            if (missionList.isEmpty()) {
+                textViewNoMissions.setVisibility(View.VISIBLE);
+                recyclerViewMissions.setVisibility(View.GONE);
+            } else {
+                textViewNoMissions.setVisibility(View.GONE);
+                recyclerViewMissions.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "加载任务失败", e);
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     private void showSubmitMissionDialog() {
@@ -297,12 +297,14 @@ public class ChildDashboardActivity extends AppCompatActivity {
                 commandStore.saveMissions(new org.json.JSONArray("[" + result + "]"));
                 
                 runOnUiThread(() -> {
-                        Toast.makeText(this, R.string.mission_submitted, Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "提交失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
+                    Toast.makeText(this, R.string.mission_submitted, Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "提交失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
         });
     }
 
