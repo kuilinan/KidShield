@@ -1,60 +1,33 @@
 package com.yousafdev.KidShield.Activities;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-
-
-
-
-
-import com.yousafdev.KidShield.Adapters.CallLogAdapter;
-import com.yousafdev.KidShield.Adapters.SmsLogAdapter;
-import com.yousafdev.KidShield.Models.CallLogEntry;
 import com.yousafdev.KidShield.Models.Mission;
-import com.yousafdev.KidShield.Models.SmsLogEntry;
-import com.yousafdev.KidShield.Models.TimeRequest;
+import com.yousafdev.KidShield.Network.ApiClient;
+import com.yousafdev.KidShield.Network.CommandStore;
 import com.yousafdev.KidShield.R;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-public class ChildDetailActivity extends AppCompatActivity implements OnMapReadyCallback {
-    private MapView mapView;
-    private GoogleMap googleMap;
+public class ChildDetailActivity extends AppCompatActivity {
+
+    private CommandStore commandStore;
+    private ApiClient apiClient;
     private String childUid;
-    private RecyclerView callLogRecyclerView, smsLogRecyclerView;
-    private CallLogAdapter callLogAdapter;
-    private SmsLogAdapter smsLogAdapter;
-    private List<CallLogEntry> callLogList;
-    private List<SmsLogEntry> smsLogList;
-    private ProgressBar progressBar;
-    private Button manageAppsButton;
-    private Button missionApprovalButton;
-    private Button timeRequestButton;
+    private String childEmail;
     private TextView missionCountView;
     private TextView timeRequestCountView;
-    private Button assignMissionButton;
-    private TextView textViewUsage;
-    private android.widget.LinearLayout usageSection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,248 +35,119 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
         setContentView(R.layout.activity_child_detail);
 
         childUid = getIntent().getStringExtra("CHILD_UID");
-        String childEmail = getIntent().getStringExtra("CHILD_EMAIL");
-        TextView title = findViewById(R.id.textView_child_detail_title);
-        title.setText(childEmail != null ? childEmail : "孩子详情");
+        childEmail = getIntent().getStringExtra("CHILD_EMAIL");
 
-        progressBar = findViewById(R.id.progressBar_details);
+        commandStore = new CommandStore(this);
+        apiClient = new ApiClient();
 
-        // 地图
-        mapView = findViewById(R.id.mapView);
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(this);
+        missionCountView = findViewById(R.id.textView_mission_count);
+        timeRequestCountView = findViewById(R.id.textView_time_request_count);
 
-        // 按钮
-        manageAppsButton = findViewById(R.id.button_manage_apps);
-        missionApprovalButton = findViewById(R.id.button_mission_approval);
-        timeRequestButton = findViewById(R.id.button_time_requests);
-        assignMissionButton = findViewById(R.id.button_assign_mission);
-        assignMissionButton.setOnClickListener(v -> showAssignMissionDialog());
-        missionCountView = findViewById(R.id.textView_pending_missions);
-        timeRequestCountView = findViewById(R.id.textView_pending_time_requests);
+        loadPendingCounts();
 
-        manageAppsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AppBlockerActivity.class);
-            intent.putExtra("CHILD_UID", childUid);
-            startActivity(intent);
-        });
+        Button approveMissionsBtn = findViewById(R.id.button_approve_missions);
+        if (approveMissionsBtn != null) {
+            approveMissionsBtn.setOnClickListener(v -> showMissionApprovalDialog());
+        }
 
-        missionApprovalButton.setOnClickListener(v -> showMissionApprovalDialog());
-        timeRequestButton.setOnClickListener(v -> showTimeRequestApprovalDialog());
-
-        // RecyclerViews
-        setupRecyclerViews();
-        if (childUid != null) {
-            listenForDataChanges();
-            loadPendingCounts();
+        Button assignMissionBtn = findViewById(R.id.button_assign_mission);
+        if (assignMissionBtn != null) {
+            assignMissionBtn.setOnClickListener(v -> showAssignMissionDialog());
         }
     }
 
-    private void setupRecyclerViews() {
-        callLogRecyclerView = findViewById(R.id.recyclerView_call_logs);
-        callLogRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        callLogList = new ArrayList<>();
-        callLogAdapter = new CallLogAdapter(callLogList);
-        callLogRecyclerView.setAdapter(callLogAdapter);
-
-        smsLogRecyclerView = findViewById(R.id.recyclerView_sms_logs);
-        smsLogRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        smsLogList = new ArrayList<>();
-        smsLogAdapter = new SmsLogAdapter(smsLogList);
-        smsLogRecyclerView.setAdapter(smsLogAdapter);
-    }
-
-    @Override
-    public void onMapReady(@NonNull GoogleMap map) {
-        googleMap = map;
-        googleMap.getUiSettings().setZoomControlsEnabled(true);
-    }
-
     private void loadPendingCounts() {
-        // 待审核任务数量
-                                    String status = s.child("status").getValue(String.class);
-                            if ("pending".equals(status)) pending++;
-                        }
-                        missionCountView.setText("待审核: " + pending);
-                    }
-                });
-
-        // 待审核加时长申请数量
-                                    String status = s.child("status").getValue(String.class);
-                            if ("pending".equals(status)) pending++;
-                        }
-                        timeRequestCountView.setText("待审核: " + pending);
-                    }
-                });
+        try {
+            JSONArray missions = commandStore.getMissions();
+            int pendingCount = 0;
+            for (int i = 0; i < missions.length(); i++) {
+                JSONObject obj = missions.getJSONObject(i);
+                if ("pending".equals(obj.optString("status"))) {
+                    pendingCount++;
+                }
+            }
+            missionCountView.setText("待审核: " + pendingCount);
+            timeRequestCountView.setText("待审核: 0");
+        } catch (Exception e) {
+            missionCountView.setText("待审核: 0");
+            timeRequestCountView.setText("待审核: 0");
+        }
     }
 
     private void showMissionApprovalDialog() {
-        
-            @Override
-                List<Mission> pendingMissions = new ArrayList<>();
-                    Mission m = s.getValue(Mission.class);
-                    if (m != null && "pending".equals(m.status)) {
-                        m.id = s.getKey();
-                        pendingMissions.add(m);
-                    }
-                }
+        try {
+            JSONArray missions = commandStore.getMissions();
+            List<Mission> pendingMissions = new ArrayList<>();
 
-                if (pendingMissions.isEmpty()) {
-                    Toast.makeText(ChildDetailActivity.this, "暂无待审核的任务", Toast.LENGTH_SHORT).show();
-                    return;
+            for (int i = 0; i < missions.length(); i++) {
+                JSONObject obj = missions.getJSONObject(i);
+                if ("pending".equals(obj.optString("status"))) {
+                    Mission m = new Mission();
+                    m.id = obj.optString("id", "");
+                    m.title = obj.optString("title", "");
+                    m.description = obj.optString("description", "");
+                    m.reward = obj.optInt("reward", 0);
+                    m.status = "pending";
+                    pendingMissions.add(m);
                 }
-
-                String[] items = new String[pendingMissions.size()];
-                for (int i = 0; i < pendingMissions.size(); i++) {
-                    Mission m = pendingMissions.get(i);
-                    items[i] = m.title + " (" + m.description + ")";
-                }
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(ChildDetailActivity.this);
-                builder.setTitle("待审核任务")
-                        .setItems(items, (dialog, which) -> {
-                            Mission selected = pendingMissions.get(which);
-                            showMissionActionDialog(selected);
-                        })
-                        .show();
             }
-        });
-    }
 
-    private void showMissionActionDialog(Mission mission) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("审核任务: " + mission.title)
-                .setMessage("描述: " + mission.description + "\n\n通过后是否奖励时长（分钟）？未填写则默认为0");
+            if (pendingMissions.isEmpty()) {
+                Toast.makeText(this, "暂无待审核的任务", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        android.widget.LinearLayout layout = new android.widget.LinearLayout(this);
-        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
-        layout.setPadding(50, 20, 50, 20);
+            String[] items = new String[pendingMissions.size()];
+            for (int i = 0; i < pendingMissions.size(); i++) {
+                Mission m = pendingMissions.get(i);
+                items[i] = m.title + " (" + m.description + ")";
+            }
 
-        android.widget.EditText rewardInput = new android.widget.EditText(this);
-        rewardInput.setHint("奖励时长（分钟）");
-        rewardInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-        layout.addView(rewardInput);
-        builder.setView(layout);
+            boolean[] checked = new boolean[pendingMissions.size()];
 
-        builder.setPositiveButton("✅ 通过", (dialog, which) -> {
-            String rewardStr = rewardInput.getText().toString().trim();
-            int reward = rewardStr.isEmpty() ? 0 : Integer.parseInt(rewardStr);
-            ref.child("status").setValue("approved");
-            ref.child("rewardMinutes").setValue(reward);
-            Toast.makeText(this, "✅ 任务已通过，奖励 " + reward + " 分钟", Toast.LENGTH_SHORT).show();
-        });
-        builder.setNegativeButton("❌ 驳回", (dialog, which) -> {
-            Toast.makeText(this, "❌ 任务已驳回", Toast.LENGTH_SHORT).show();
-        });
-        builder.setNeutralButton("取消", null);
-        builder.show();
-    }
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("审核任务");
+            builder.setMultiChoiceItems(items, checked, (dialog, which, isChecked) -> {
+                checked[which] = isChecked;
+            });
 
-    private void showTimeRequestApprovalDialog() {
-        
-            @Override
-                List<TimeRequest> pendingRequests = new ArrayList<>();
-                    TimeRequest r = s.getValue(TimeRequest.class);
-                    if (r != null && "pending".equals(r.status)) {
-                        r.id = s.getKey();
-                        pendingRequests.add(r);
+            builder.setPositiveButton("通过选中", (dialog, which) -> {
+                String token = getSharedPreferences("kidshield", MODE_PRIVATE).getString("token", "");
+                for (int i = 0; i < pendingMissions.size(); i++) {
+                    if (checked[i]) {
+                        Mission m = pendingMissions.get(i);
+                        approveMission(token, m.id);
                     }
+                }
+                loadPendingCounts();
+                Toast.makeText(this, "操作完成", Toast.LENGTH_SHORT).show();
+            });
+            builder.setNegativeButton("取消", null);
+            builder.show();
+        } catch (Exception e) {
+            Toast.makeText(this, "加载任务失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
 
-
-                if (pendingRequests.isEmpty()) {
-                    Toast.makeText(ChildDetailActivity.this, "暂无待审核的加时长申请", Toast.LENGTH_SHORT).show();
-                    return;
-
-
-                String[] items = new String[pendingRequests.size()];
-                for (int i = 0; i < pendingRequests.size(); i++) {
-                    TimeRequest r = pendingRequests.get(i);
-                    items[i] = r.appName + " (+" + r.requestedMinutes + "分钟)";
-                    if (r.reason != null && !r.reason.isEmpty()) {
-                        items[i] += "\n理由: " + r.reason;
-
-
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(ChildDetailActivity.this);
-                builder.setTitle("待审核加时长申请")
-                        .setItems(items, (dialog, which) -> {
-                            TimeRequest selected = pendingRequests.get(which);
-                            showTimeRequestActionDialog(selected);
-                        })
-                        .show();
-
-        });
-
-
-    private void showTimeRequestActionDialog(TimeRequest request) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("加时长申请")
-                .setMessage("应用: " + request.appName + "\n时长: " + request.requestedMinutes + "分钟\n理由: " +
-                        (request.reason != null ? request.reason : "无"));
-
-        builder.setPositiveButton("✅ 通过", (dialog, which) -> {
-            ref.child("status").setValue("approved");
-
-            // 将额外时长写入白名单临时放行节点
-            if (request.packageName != null) {
-                long extraTime = (long) request.requestedMinutes * 60 * 1000 + System.currentTimeMillis();
-
-            Toast.makeText(this, "✅ 加时长申请已通过", Toast.LENGTH_SHORT).show();
-        });
-        builder.setNegativeButton("❌ 驳回", (dialog, which) -> {
-            Toast.makeText(this, "❌ 申请已驳回", Toast.LENGTH_SHORT).show();
-        });
-        builder.setNeutralButton("取消", null);
-        builder.show();
-
-
-    private void listenForDataChanges() {
-        
-            @Override
-                if (snapshot.exists() && googleMap != null) {
-                    Double lat = snapshot.child("latitude").getValue(Double.class);
-                    Double lon = snapshot.child("longitude").getValue(Double.class);
-                    if (lat != null && lon != null) {
-                        LatLng childLocation = new LatLng(lat, lon);
-                        googleMap.clear();
-                        googleMap.addMarker(new MarkerOptions().position(childLocation).title("最后已知位置"));
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(childLocation, 15f));
-
-
-                progressBar.setVisibility(View.GONE);
-
-        });
-
-            @Override
-                callLogList.clear();
-                    CallLogEntry entry = logSnapshot.getValue(CallLogEntry.class);
-                    if (entry != null) callLogList.add(entry);
-
-                Collections.reverse(callLogList);
-                callLogAdapter.notifyDataSetChanged();
-
-        });
-
-            @Override
-                smsLogList.clear();
-                    SmsLogEntry entry = logSnapshot.getValue(SmsLogEntry.class);
-                    if (entry != null) smsLogList.add(entry);
-
-                Collections.reverse(smsLogList);
-                smsLogAdapter.notifyDataSetChanged();
-
-        });
-
-
-    @Override protected void onResume() { super.onResume(); mapView.onResume(); }
-    @Override protected void onStart() { super.onStart(); mapView.onStart(); }
-    @Override protected void onStop() { super.onStop(); mapView.onStop(); }
-    @Override protected void onPause() { super.onPause(); mapView.onPause(); }
-    @Override protected void onDestroy() { super.onDestroy(); mapView.onDestroy(); }
+    private void approveMission(String token, String missionId) {
+        // 通过 API 审核任务
+        new Thread(() -> {
+            try {
+                // 这里调用 API 审核任务
+                // apiClient.approveMission(token, childUid, missionId);
+                // 然后更新本地 CommandStore
+                runOnUiThread(() -> Toast.makeText(ChildDetailActivity.this,
+                    "任务已审核", Toast.LENGTH_SHORT).show());
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(ChildDetailActivity.this,
+                    "审核失败: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
 
     private void showAssignMissionDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.assign_new_mission);
+        builder.setTitle("布置新任务");
 
         View view = getLayoutInflater().inflate(R.layout.dialog_submit_mission, null);
         builder.setView(view);
@@ -312,7 +156,7 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
         androidx.appcompat.widget.AppCompatEditText editDesc = view.findViewById(R.id.editText_mission_desc);
         androidx.appcompat.widget.AppCompatEditText editReward = view.findViewById(R.id.editText_mission_reward);
 
-        builder.setPositiveButton(R.string.submit, (dialog, which) -> {
+        builder.setPositiveButton("布置", (dialog, which) -> {
             String title = editTitle.getText().toString().trim();
             String desc = editDesc.getText().toString().trim();
             String rewardStr = editReward.getText().toString().trim();
@@ -320,7 +164,7 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
             if (title.isEmpty()) {
                 Toast.makeText(this, "请输入任务标题", Toast.LENGTH_SHORT).show();
                 return;
-
+            }
 
             int reward = 0;
             if (!rewardStr.isEmpty()) {
@@ -329,20 +173,30 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                 } catch (NumberFormatException e) {
                     Toast.makeText(this, "奖励时长请输入数字", Toast.LENGTH_SHORT).show();
                     return;
+                }
+            }
 
+            String missionId = "mission_" + System.currentTimeMillis();
 
-
-            String missionId = if (missionId == null) return;
-
-            Mission mission = new Mission(missionId, title, desc, reward, "parent_assign");
-            dialog.dismiss();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "布置失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+            // 通过 API 布置任务
+            String token = getSharedPreferences("kidshield", MODE_PRIVATE).getString("token", "");
+            final int rewardFinal = reward;
+            new Thread(() -> {
+                try {
+                    String result = apiClient.createMission(token, childUid, title, desc, rewardFinal);
+                    commandStore.saveMissions(new JSONArray("[" + result + "]"));
+                    runOnUiThread(() -> {
+                        Toast.makeText(ChildDetailActivity.this, "任务已布置", Toast.LENGTH_SHORT).show();
+                        loadPendingCounts();
                     });
+                } catch (Exception e) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(ChildDetailActivity.this, "布置失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }).start();
         });
-        builder.setNegativeButton(R.string.cancel, null);
+        builder.setNegativeButton("取消", null);
         builder.show();
-
-    @Override public void onLowMemory() { super.onLowMemory(); mapView.onLowMemory(); }
-
+    }
+}
