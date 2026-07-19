@@ -2,32 +2,78 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.READ_CALL_LOG" />
-    <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- ========== 基础权限 ========== -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SET_ALARM" />
+    
+    <!-- ========== 开机自启 & 解锁自启（阳光守护特性） ========== -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT" />
+    
+    <!-- ========== 设备管理员（防卸载） ========== -->
+    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN" />
+    
+    <!-- ========== 通知监听 ========== -->
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
+    
+    <!-- ========== 使用统计 ========== -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
-    <!-- 开发者封锁权限 -->
+    
+    <!-- ========== 定位（含后台） ========== -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+    
+    <!-- ========== 存储 & 安装删除 ========== -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    
+    <!-- ========== 音频 & 摄像头 ========== -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- ========== 通话 & 短信 ========== -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    
+    <!-- ========== 蓝牙 ========== -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    
+    <!-- ========== 开发者封锁 ========== -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-
+    
+    <!-- ========== 设备电源控制 ========== -->
+    <uses-permission android:name="android.permission.DEVICE_POWER" />
+    
+    <!-- ========== 壁纸 & 桌面小部件 ========== -->
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER_HINTS" />
+    <uses-permission android:name="android.permission.BIND_APPWIDGET" />
 
     <application
         android:allowBackup="true"
@@ -39,81 +85,46 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.KidShield"
         tools:targetApi="31">
-        <activity
-            android:name=".Activities.AppBlockerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activities.BlockedScreenActivity"
-            android:exported="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
-        <activity
-            android:name=".Activities.ChildDetailActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activities.ParentDashboardActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activities.ChildDashboardActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activities.ChildSetupActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activities.RegisterActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activities.LoginActivity"
-            android:exported="true">
+
+        <!-- ==================== Activities ==================== -->
+        <activity android:name=".Activities.LoginActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Activities.RegisterActivity" android:exported="false" />
+        <activity android:name=".Activities.ParentDashboardActivity" android:exported="false" />
+        <activity android:name=".Activities.ChildDashboardActivity" android:exported="false" />
+        <activity android:name=".Activities.ChildDetailActivity" android:exported="false" />
+        <activity android:name=".Activities.ChildSetupActivity" android:exported="false" />
+        <activity android:name=".Activities.AppBlockerActivity" android:exported="false" />
+        <activity android:name=".Activities.BlockedScreenActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
+        <!-- ==================== Services ==================== -->
+
+        <!-- 监控服务：白名单拦截 + 开发者模式封锁 -->
         <service
             android:name=".Services.MonitoringService"
+            android:foregroundServiceType="location|dataSync"
+            android:exported="false" />
+
+        <!-- 位置权限守护服务 -->
         <service
             android:name=".Services.LocationGuardService"
             android:foregroundServiceType="location"
-            android:exported="false"/>
-            android:foregroundServiceType="location|dataSync"
-            android:exported="false"/>
-
-        <receiver
-            android:name=".Utils.MyDeviceAdminReceiver"
-            android:description="@string/app_name"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin_policies" />
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".Utils.BootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".Utils.AlarmReceiver"
-            android:enabled="true"
             android:exported="false" />
 
+        <!-- 综合守护服务：保活 + 设备管理员检查（阳光守护核心保活机制） -->
+        <service
+            android:name=".Services.GuardService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_API_KEY_HERE" />
-
-
+        <!-- 无障碍服务 -->
         <service
             android:name=".Services.AppAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
@@ -126,6 +137,67 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-    </application>
 
+        <!-- 通知监听服务（阳光守护特性：读取所有通知内容） -->
+        <service
+            android:name=".Services.NotificationListener"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:label="通知监听"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <!-- ==================== Receivers ==================== -->
+
+        <!-- 设备管理员接收器（防卸载核心） -->
+        <receiver
+            android:name=".DeviceAdmin.AdminReceiver"
+            android:description="@string/app_name"
+            android:exported="true"
+            android:label="KidShield 设备管理员"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 开机自启接收器（RECEIVE_BOOT_COMPLETED + RECEIVE_USER_PRESENT 双重唤醒） -->
+        <receiver
+            android:name=".Utils.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 闹钟接收器 -->
+        <receiver
+            android:name=".Utils.AlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- 电源状态监听（阳光守护保活特性：充电时唤醒） -->
+        <receiver
+            android:name=".Utils.PowerConnectionReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_API_KEY_HERE" />
+
+    </application>
 </manifest>

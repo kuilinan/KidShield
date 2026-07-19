@@ -26,7 +26,7 @@ import com.yousafdev.KidShield.R;
 import com.yousafdev.KidShield.Services.AppAccessibilityService;
 import com.yousafdev.KidShield.Services.MonitoringService;
 import com.yousafdev.KidShield.Utils.BootReceiver;
-import com.yousafdev.KidShield.Utils.MyDeviceAdminReceiver;
+import com.yousafdev.KidShield.DeviceAdmin.AdminReceiver;
 import java.util.Map;
 
 class PermissionViewHolder {
@@ -70,7 +70,7 @@ public class ChildSetupActivity extends AppCompatActivity {
         setContentView(R.layout.activity_child_setup);
 
         dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        compName = new ComponentName(this, MyDeviceAdminReceiver.class);
+        compName = new ComponentName(this, AdminReceiver.class);
 
         initializeViews();
         setupClickListeners();

@@ -196,3 +196,21 @@
     <string name="autostart_hint">开启自启动后，即使手机重启也能自动保护你哦</string>
     <string name="go_to_autostart">去开启自启动</string>
     <string name="location_protected">位置保护已开启 ✅</string>
+
+    <!-- 设备管理员 -->
+    <string name="device_admin_title">激活设备管理员</string>
+    <string name="device_admin_description">激活后KidShield将受到系统保护，孩子无法直接卸载应用，保障管控不中断</string>
+    <string name="device_admin_activating">正在激活设备管理员…</string>
+    <string name="device_admin_active">设备管理员已激活 ✅</string>
+    
+    <!-- 通知监听 -->
+    <string name="notification_listener_title">通知监听</string>
+    <string name="notification_listener_description">授权后家长可查看孩子收到的应用通知内容</string>
+    
+    <!-- 守护横幅增强 -->
+    <string name="guard_all_active">全方位守护中 🛡️</string>
+    <string name="guard_dev_mode_blocked">开发者模式已封锁</string>
+    
+    <!-- 保活相关 -->
+    <string name="guard_service_running">KidShield 守护引擎运行中</string>
+    <string name="guard_killed_warning">检测到守护服务被异常终止，正在自动恢复…</string>

@@ -9,57 +9,91 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.yousafdev.KidShield.Services.GuardService;
+import com.yousafdev.KidShield.Services.LocationGuardService;
 import com.yousafdev.KidShield.Services.MonitoringService;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 开机/解锁自启接收器
+ * 监听 BOOT_COMPLETED（开机） 和 USER_PRESENT（解锁屏幕）
+ * 启动所有守护服务防止管控被绕过
+ */
 public class BootReceiver extends BroadcastReceiver {
-
     private static final String TAG = "BootReceiver";
     private static final long SYNC_INTERVAL = TimeUnit.MINUTES.toMillis(1);
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-            Log.d(TAG, "Boot completed. Starting services and alarms.");
+        String action = intent.getAction();
+        if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+            Log.d(TAG, "📱 手机开机完成 → 启动所有守护服务");
+        } else if (Intent.ACTION_USER_PRESENT.equals(action)) {
+            Log.d(TAG, "🔓 屏幕解锁 → 确保所有守护服务运行");
+        } else {
+            return;
+        }
 
-            // 1. Start the main MonitoringService for app blocking
-            Intent serviceIntent = new Intent(context, MonitoringService.class);
+        startAllGuardServices(context);
+        scheduleDataSync(context);
+    }
+
+    private void startAllGuardServices(Context context) {
+        try {
+            // 1. 启动监控服务（白名单拦截 + 开发者封锁）
+            Intent monitoringIntent = new Intent(context, MonitoringService.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent);
+                context.startForegroundService(monitoringIntent);
             } else {
-                context.startService(serviceIntent);
+                context.startService(monitoringIntent);
+            }
+            Log.d(TAG, "✅ MonitoringService 已启动");
+
+            // 2. 启动综合守护服务（设备管理员检查 + 开发者封锁 + 保活）
+            Intent guardIntent = new Intent(context, GuardService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(guardIntent);
+            } else {
+                context.startService(guardIntent);
+            }
+            Log.d(TAG, "✅ GuardService 已启动");
+
+            // 3. 启动位置守护服务
+            try {
+                Intent locationIntent = new Intent(context, LocationGuardService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(locationIntent);
+                } else {
+                    context.startService(locationIntent);
+                }
+                Log.d(TAG, "✅ LocationGuardService 已启动");
+            } catch (Exception e) {
+                Log.e(TAG, "启动位置守护失败（可忽略）", e);
             }
 
-            // 2. Schedule the periodic data sync using AlarmManager
-            scheduleDataSync(context);
+        } catch (Exception e) {
+            Log.e(TAG, "启动守护服务失败", e);
         }
     }
 
     public static void scheduleDataSync(Context context) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, AlarmReceiver.class);
-
-        // Use FLAG_IMMUTABLE for security on newer Android versions
-        int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT : PendingIntent.FLAG_UPDATE_CURRENT;
+        int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M 
+            ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT 
+            : PendingIntent.FLAG_UPDATE_CURRENT;
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, flags);
-
-
+        
         if (alarmManager != null) {
-            // Cancel any existing alarms to avoid duplicates
             alarmManager.cancel(pendingIntent);
-
-            // Set an inexact repeating alarm. This is more battery-friendly.
-            // The alarm will first trigger after the interval and then repeat.
             alarmManager.setInexactRepeating(
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     SystemClock.elapsedRealtime() + SYNC_INTERVAL,
                     SYNC_INTERVAL,
                     pendingIntent
             );
-            Log.d(TAG, "Data sync alarm scheduled to run every " + TimeUnit.MILLISECONDS.toMinutes(SYNC_INTERVAL) + " minute(s).");
-        } else {
-            Log.e(TAG, "AlarmManager is null. Cannot schedule data sync.");
+            Log.d(TAG, "数据同步闹钟已设置，每 " + TimeUnit.MILLISECONDS.toMinutes(SYNC_INTERVAL) + " 分钟一次");
         }
     }
 }
