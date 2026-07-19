@@ -155,7 +155,6 @@
     <string name="block_wifi_adb">禁止无线调试</string>
     <string name="whitelist_mode">白名单模式</string>
     <string name="whitelist_mode_desc">开启后仅系统应用和家长选定的应用可用</string>
-</resources>
     <!-- 温馨守护横幅 -->
     <string name="parent_guardian_banner">👨‍👩‍👧‍👦 你的家长正在为你远程守护</string>
     <string name="parent_guardian_banner_sub">努力学习，健康成长 ❤️</string>
@@ -213,3 +212,4 @@
     <!-- 保活相关 -->
     <string name="guard_service_running">KidShield 守护引擎运行中</string>
     <string name="guard_killed_warning">检测到守护服务被异常终止，正在自动恢复…</string>
+</resources>
