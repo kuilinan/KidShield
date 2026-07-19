@@ -18,7 +18,7 @@
             android:id="@+id/textView_title_register"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create Account"
+            android:text="@string/register_title"
             android:textColor="@color/kidshield_text_primary"
             android:textSize="32sp"
             android:textStyle="bold"
@@ -102,7 +102,7 @@
                 android:id="@+id/radioButton_parent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Parent"
+                android:text="@string/parent"
                 android:textColor="@color/kidshield_text_secondary"
                 android:buttonTint="@color/kidshield_blue_primary"/>
 
@@ -111,7 +111,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="Child"
+                android:text="@string/child"
                 android:textColor="@color/kidshield_text_secondary"
                 android:buttonTint="@color/kidshield_blue_primary"/>
         </RadioGroup>
@@ -147,7 +147,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:paddingVertical="14dp"
-            android:text="Register"
+            android:text="@string/register"
             android:textColor="@color/white"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -169,7 +169,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Already have an account? Login"
+            android:text="@string/has_account"
             android:textColor="@color/kidshield_text_secondary"
             android:textSize="16sp"
             app:layout_constraintTop_toBottomOf="@id/button_register"

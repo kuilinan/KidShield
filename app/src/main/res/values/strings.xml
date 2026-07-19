@@ -1,4 +1,158 @@
 <resources>
     <string name="app_name">KidShield</string>
-    <string name="accessibility_service_description">KidShield uses this service to monitor which app is currently open, allowing it to block apps selected by the parent for your safety.</string>
+    <string name="app_name_parent">KidShield 家长端</string>
+    <string name="app_name_child">KidShield 孩子端</string>
+    <string name="accessibility_service_description">KidShield 使用无障碍服务监控当前运行的应用，以帮助家长保护孩子的安全，拦截未经允许的应用。</string>
+    
+    <!-- 通用 -->
+    <string name="loading">加载中…</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确认</string>
+    <string name="submit">提交</string>
+    <string name="approve">通过</string>
+    <string name="reject">驳回</string>
+    <string name="status_pending">待审核</string>
+    <string name="status_approved">已通过</string>
+    <string name="status_rejected">已驳回</string>
+    <string name="back">返回</string>
+    <string name="error">错误</string>
+
+    <!-- 登录页面 -->
+    <string name="welcome_back">欢迎回来</string>
+    <string name="email">邮箱</string>
+    <string name="password">密码</string>
+    <string name="login">登录</string>
+    <string name="login_title">登录</string>
+    <string name="no_account">没有账号？去注册</string>
+    <string name="please_enter_email">请输入邮箱地址</string>
+    <string name="please_enter_password">请输入密码</string>
+    <string name="login_failed">登录失败：</string>
+    <string name="unknown_role">未知的用户角色</string>
+    <string name="user_data_not_found">未找到用户数据，请重新注册</string>
+    <string name="db_error">数据库错误：</string>
+
+    <!-- 注册页面 -->
+    <string name="register">注册</string>
+    <string name="register_title">创建账号</string>
+    <string name="register_hint">注册</string>
+    <string name="has_account">已有账号？去登录</string>
+    <string name="parent">家长</string>
+    <string name="child">孩子</string>
+    <string name="select_role">请选择身份</string>
+    <string name="parent_email">家长邮箱</string>
+    <string name="please_enter_parent_email">请输入家长的邮箱地址</string>
+    <string name="password_min_length">密码至少需要6个字符</string>
+    <string name="registration_successful">注册成功！</string>
+    <string name="registration_failed">注册失败：</string>
+    <string name="db_write_error">数据库写入错误：</string>
+    <string name="email_format_error">邮箱格式不正确</string>
+
+    <!-- 家长控制台 -->
+    <string name="parent_dashboard">家长控制台</string>
+    <string name="my_children">我的孩子</string>
+    <string name="no_children">暂无已关联的孩子</string>
+    <string name="failed_to_load_children">加载孩子列表失败：</string>
+
+    <!-- 孩子详情 -->
+    <string name="child_detail_title">孩子详情</string>
+    <string name="manage_apps">管理应用</string>
+    <string name="whitelist_manage">白名单管理</string>
+    <string name="mission_approval">任务审核</string>
+    <string name="time_requests">加时长申请</string>
+    <string name="child_location">孩子位置</string>
+    <string name="last_location">最后已知位置</string>
+    <string name="call_logs">通话记录</string>
+    <string name="sms_logs">短信记录</string>
+    <string name="no_call_logs">暂无通话记录</string>
+    <string name="no_sms_logs">暂无短信记录</string>
+
+    <!-- 应用管理（白名单） -->
+    <string name="app_whitelist">应用白名单</string>
+    <string name="search_apps">搜索应用…</string>
+    <string name="only_allowed_apps">仅显示允许的应用</string>
+    <string name="allowed">已允许</string>
+    <string name="blocked">已拦截</string>
+    <string name="toggle_switch_hint">开启=此应用允许使用</string>
+    <string name="load_apps_failed">加载应用列表失败</string>
+    <string name="load_status_failed">加载应用状态失败</string>
+    <string name="no_child_id">未找到孩子ID</string>
+    <string name="system_app_label">系统应用</string>
+
+    <!-- 白名单模式说明 -->
+    <string name="whitelist_mode_desc">白名单模式已启用：仅系统应用和您勾选的应用可供孩子使用，其余全部自动拦截。</string>
+    <string name="whitelist_disabled_notice">白名单模式关闭后，所有应用均可使用。</string>
+
+    <!-- 被锁定页面 -->
+    <string name="app_blocked_title">应用已被锁定</string>
+    <string name="app_blocked_message">当前应用已被家长限制，无法使用。</string>
+    <string name="blocked_contact_parent">如需使用，请向家长提交加时长申请。</string>
+    <string name="blocked_ok">我知道了</string>
+
+    <!-- 开发者模式封锁 -->
+    <string name="developer_disabled_title">开发者模式已受限</string>
+    <string name="developer_disabled_message">根据家长设置，开发者模式及ADB调试已被禁用。</string>
+
+    <!-- 任务系统 -->
+    <string name="missions">任务</string>
+    <string name="my_missions">我的任务</string>
+    <string name="new_mission">新建任务</string>
+    <string name="mission_title">任务标题</string>
+    <string name="mission_desc">任务描述</string>
+    <string name="mission_reward">奖励时长（分钟）</string>
+    <string name="mission_submitted">任务已提交，等待家长审核</string>
+    <string name="mission_approve_confirm">确认通过此任务？</string>
+    <string name="mission_reject_confirm">确认驳回此任务？</string>
+    <string name="no_missions">暂无任务</string>
+    <string name="mission_reward_hint">完成后可获得多少分钟的使用时长</string>
+    <string name="submit_mission">提交任务</string>
+    <string name="pending_missions">待审核的任务</string>
+
+    <!-- 加时长申请 -->
+    <string name="request_time">申请加时长</string>
+    <string name="time_request_title">申请加时长</string>
+    <string name="time_request_app">目标应用</string>
+    <string name="time_request_minutes">申请时长（分钟）</string>
+    <string name="time_request_reason">申请理由</string>
+    <string name="time_request_submitted">加时长申请已提交</string>
+    <string name="time_request_approve_confirm">确认通过此加时长申请？</string>
+    <string name="time_request_reject_confirm">确认驳回此申请？</string>
+    <string name="no_time_requests">暂无加时长申请</string>
+    <string name="pending_time_requests">待审核的加时长申请</string>
+    <string name="request_time_hint">选择需要延长时间的锁屏应用</string>
+    <string name="select_app">选择应用</string>
+    <string name="remaining_time">剩余可用时间</string>
+    <string name="time_expired">已用完</string>
+
+    <!-- 孩子首页 -->
+    <string name="child_home">孩子首页</string>
+    <string name="my_tasks">我的任务</string>
+    <string name="submit_task">提交任务</string>
+    <string name="request_unlock">申请解锁应用</string>
+
+    <!-- 无障碍服务相关 -->
+    <string name="accessibility_required">需要开启无障碍服务</string>
+    <string name="accessibility_hint">请在系统设置中为 KidShield 开启无障碍服务，以启用应用拦截功能。</string>
+    <string name="go_to_settings">前往设置</string>
+
+    <!-- 时间段限制 -->
+    <string name="time_restrictions">时段限制</string>
+    <string name="set_restriction_time">设置禁用时段</string>
+    <string name="start_time_restriction">开始时间</string>
+    <string name="end_time_restriction">结束时间</string>
+    <string name="add_restriction">添加时段</string>
+    <string name="remove_restriction">移除</string>
+    <string name="current_restrictions">当前时段限制</string>
+    <string name="no_restrictions">未设置时段限制</string>
+    <string name="apply_all_days">应用到每天</string>
+    <string name="select_days">选择日期</string>
+
+    <!-- 设置页面 -->
+    <string name="settings">设置</string>
+    <string name="block_developer_mode">禁止开发者模式</string>
+    <string name="block_developer_mode_desc">开启后将自动关闭并禁止打开开发者选项和ADB调试</string>
+    <string name="block_adb">禁止USB调试</string>
+    <string name="block_wifi_adb">禁止无线调试</string>
+    <string name="whitelist_mode">白名单模式</string>
+    <string name="whitelist_mode_desc">开启后仅系统应用和家长选定的应用可用</string>
 </resources>

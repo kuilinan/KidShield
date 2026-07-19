@@ -10,11 +10,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.yousafdev.KidShield.Models.AppInfo;
 import com.yousafdev.KidShield.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class AppBlockerAdapter extends RecyclerView.Adapter<AppBlockerAdapter.ViewHolder> {
-
     private List<AppInfo> appList;
     private OnAppBlockListener listener;
 
@@ -34,12 +34,20 @@ public class AppBlockerAdapter extends RecyclerView.Adapter<AppBlockerAdapter.Vi
         AppInfo app = appList.get(position);
         holder.appName.setText(app.appName);
 
+        // 白名单模式：开关 ON = 允许（whitelisted），OFF = 禁止
         holder.blockSwitch.setOnCheckedChangeListener(null);
-        holder.blockSwitch.setChecked(app.isBlocked);
+        holder.blockSwitch.setChecked(app.isAllowed);
+
+        // 设置提示文字
+        if (app.isSystemApp) {
+            holder.systemLabel.setVisibility(View.VISIBLE);
+        } else {
+            holder.systemLabel.setVisibility(View.GONE);
+        }
 
         holder.blockSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (listener != null) {
-                app.isBlocked = isChecked; // Update the model state
+                app.isAllowed = isChecked;
                 listener.onAppBlockChanged(app.packageName, isChecked);
             }
         });
@@ -49,16 +57,19 @@ public class AppBlockerAdapter extends RecyclerView.Adapter<AppBlockerAdapter.Vi
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView appName;
+        TextView systemLabel;
         SwitchMaterial blockSwitch;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             appName = itemView.findViewById(R.id.textView_app_name);
+            systemLabel = itemView.findViewById(R.id.textView_system_label);
             blockSwitch = itemView.findViewById(R.id.switch_block_app);
         }
     }
 
     public interface OnAppBlockListener {
-        void onAppBlockChanged(String packageName, boolean isBlocked);
+        void onAppBlockChanged(String packageName, boolean isAllowed);
     }
 
     @SuppressLint("NotifyDataSetChanged")

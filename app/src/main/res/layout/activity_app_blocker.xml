@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
-        android:text="Installed Apps"
+        android:text="@string/app_whitelist"
         android:textColor="@color/kidshield_text_primary"
         android:textSize="32sp"
         android:textStyle="bold"
