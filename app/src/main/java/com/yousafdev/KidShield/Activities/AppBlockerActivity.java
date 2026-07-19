@@ -1,5 +1,7 @@
 package com.yousafdev.KidShield.Activities;
 
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,18 +11,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-
-
-
-
-
 import com.yousafdev.KidShield.Adapters.AppBlockerAdapter;
 import com.yousafdev.KidShield.Models.AppInfo;
+import com.yousafdev.KidShield.Network.CommandStore;
 import com.yousafdev.KidShield.R;
 
 import java.util.ArrayList;
@@ -37,7 +34,7 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
     private ProgressBar progressBar;
     private EditText searchEditText;
     private TextView modeDescription;
-// ⚠️ REMOVED FIREBASE: private DatabaseReference childRef;
+    private CommandStore commandStore;
     private String childUid;
 
     @Override
@@ -52,7 +49,7 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
             return;
         }
 
-        childRef = ; // 改用CommandStore
+        commandStore = new CommandStore(this);
         progressBar = findViewById(R.id.progressBar_apps);
         recyclerView = findViewById(R.id.recyclerView_apps);
         searchEditText = findViewById(R.id.editText_search);
@@ -94,59 +91,45 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
     private void loadData() {
         progressBar.setVisibility(View.VISIBLE);
 
-        // 先加载白名单状态
-// ⚠️ REMOVED FIREBASE: childRef.child("whitelist_apps").addValueEventListener(new ValueEventListener() {
-            @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
-                whitelistStatusMap.clear();
-// ⚠️ REMOVED FIREBASE: for (DataSnapshot statusSnapshot : snapshot.getChildren()) {
-                    String pkg = statusSnapshot.getKey().replace("_", ".");
-                    Boolean val = statusSnapshot.getValue(Boolean.class);
-                    whitelistStatusMap.put(pkg, val != null && val);
-                }
-                loadInstalledApps();
+        // 从本地 CommandStore 读取白名单状态
+        List<Map<String, String>> storedWhitelist = commandStore.getWhitelistApps();
+        whitelistStatusMap.clear();
+        for (Map<String, String> app : storedWhitelist) {
+            String pkg = app.get("package_name");
+            if (pkg != null) {
+                whitelistStatusMap.put(pkg, true);
             }
-// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(AppBlockerActivity.this, "加载状态失败", Toast.LENGTH_SHORT).show();
-            }
-        });
+        }
+
+        loadInstalledApps();
     }
 
     private void loadInstalledApps() {
-// ⚠️ REMOVED FIREBASE: childRef.child("installed_apps").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot snapshot) {
-                fullAppList.clear();
-// ⚠️ REMOVED FIREBASE: for (DataSnapshot appSnapshot : snapshot.getChildren()) {
-                    String appName = appSnapshot.child("appName").getValue(String.class);
-                    String packageName = appSnapshot.child("packageName").getValue(String.class);
-                    Boolean isSystem = appSnapshot.child("isSystemApp").getValue(Boolean.class);
+        fullAppList.clear();
 
-                    if (appName != null && packageName != null) {
-                        AppInfo app = new AppInfo(appName, packageName);
-                        app.isSystemApp = isSystem != null && isSystem;
-                        // 白名单模式：查看是否在白名单中
-                        Boolean isAllowed = whitelistStatusMap.get(packageName);
-                        app.isAllowed = app.isSystemApp || (isAllowed != null && isAllowed);
-                        fullAppList.add(app);
-                    }
-                }
-                adapter.filterList(fullAppList);
-                progressBar.setVisibility(View.GONE);
-            }
-// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(@NonNull DatabaseError error) {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(AppBlockerActivity.this, "加载应用列表失败", Toast.LENGTH_SHORT).show();
-            }
-        });
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+        for (ApplicationInfo appInfo : installedApps) {
+            String packageName = appInfo.packageName;
+            String appName = pm.getApplicationLabel(appInfo).toString();
+            boolean isSystem = (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+
+            AppInfo app = new AppInfo(appName, packageName);
+            app.isSystemApp = isSystem;
+
+            Boolean isAllowed = whitelistStatusMap.get(packageName);
+            app.isAllowed = isSystem || (isAllowed != null && isAllowed);
+
+            fullAppList.add(app);
+        }
+
+        adapter.filterList(fullAppList);
+        progressBar.setVisibility(View.GONE);
     }
 
     @Override
     public void onAppBlockChanged(String packageName, boolean isAllowed) {
-        // 保存到 Firebase whitelist_apps 节点
-        childRef.child("whitelist_apps").child(packageName.replace(".", "_")).setValue(isAllowed);
-
         // 更新内存中的列表
         for (AppInfo app : fullAppList) {
             if (app.packageName.equals(packageName)) {
@@ -154,5 +137,30 @@ public class AppBlockerActivity extends AppCompatActivity implements AppBlockerA
                 break;
             }
         }
+
+        // 保存到本地 CommandStore
+        List<Map<String, String>> currentWhitelist = commandStore.getWhitelistApps();
+        boolean found = false;
+        for (Map<String, String> entry : currentWhitelist) {
+            if (packageName.equals(entry.get("package_name"))) {
+                if (!isAllowed) {
+                    // 移除
+                    currentWhitelist.remove(entry);
+                }
+                found = true;
+                break;
+            }
+        }
+        if (isAllowed && !found) {
+            Map<String, String> newEntry = new HashMap<>();
+            newEntry.put("package_name", packageName);
+            newEntry.put("app_name", "");
+            currentWhitelist.add(newEntry);
+        }
+        commandStore.saveWhitelistApps(currentWhitelist);
+
+        // 发送广播让 AppAccessibilityService 重新加载
+        android.content.Intent updateIntent = new android.content.Intent("com.yousafdev.KidShield.UPDATE_WHITELIST");
+        sendBroadcast(updateIntent);
     }
 }
