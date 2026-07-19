@@ -208,12 +208,12 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                         r.id = s.getKey();
                         pendingRequests.add(r);
                     }
-                }
+
 
                 if (pendingRequests.isEmpty()) {
                     Toast.makeText(ChildDetailActivity.this, "暂无待审核的加时长申请", Toast.LENGTH_SHORT).show();
                     return;
-                }
+
 
                 String[] items = new String[pendingRequests.size()];
                 for (int i = 0; i < pendingRequests.size(); i++) {
@@ -221,8 +221,8 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                     items[i] = r.appName + " (+" + r.requestedMinutes + "分钟)";
                     if (r.reason != null && !r.reason.isEmpty()) {
                         items[i] += "\n理由: " + r.reason;
-                    }
-                }
+
+
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(ChildDetailActivity.this);
                 builder.setTitle("待审核加时长申请")
@@ -231,9 +231,9 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                             showTimeRequestActionDialog(selected);
                         })
                         .show();
-            }
+
         });
-    }
+
 
     private void showTimeRequestActionDialog(TimeRequest request) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -247,7 +247,7 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
             // 将额外时长写入白名单临时放行节点
             if (request.packageName != null) {
                 long extraTime = (long) request.requestedMinutes * 60 * 1000 + System.currentTimeMillis();
-                }
+
             Toast.makeText(this, "✅ 加时长申请已通过", Toast.LENGTH_SHORT).show();
         });
         builder.setNegativeButton("❌ 驳回", (dialog, which) -> {
@@ -255,7 +255,7 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
         });
         builder.setNeutralButton("取消", null);
         builder.show();
-    }
+
 
     private void listenForDataChanges() {
         
@@ -268,32 +268,32 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                         googleMap.clear();
                         googleMap.addMarker(new MarkerOptions().position(childLocation).title("最后已知位置"));
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(childLocation, 15f));
-                    }
-                }
+
+
                 progressBar.setVisibility(View.GONE);
-            }
+
         });
 
             @Override
                 callLogList.clear();
                     CallLogEntry entry = logSnapshot.getValue(CallLogEntry.class);
                     if (entry != null) callLogList.add(entry);
-                }
+
                 Collections.reverse(callLogList);
                 callLogAdapter.notifyDataSetChanged();
-            }
+
         });
 
             @Override
                 smsLogList.clear();
                     SmsLogEntry entry = logSnapshot.getValue(SmsLogEntry.class);
                     if (entry != null) smsLogList.add(entry);
-                }
+
                 Collections.reverse(smsLogList);
                 smsLogAdapter.notifyDataSetChanged();
-            }
+
         });
-    }
+
 
     @Override protected void onResume() { super.onResume(); mapView.onResume(); }
     @Override protected void onStart() { super.onStart(); mapView.onStart(); }
@@ -320,7 +320,7 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
             if (title.isEmpty()) {
                 Toast.makeText(this, "请输入任务标题", Toast.LENGTH_SHORT).show();
                 return;
-            }
+
 
             int reward = 0;
             if (!rewardStr.isEmpty()) {
@@ -329,8 +329,8 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
                 } catch (NumberFormatException e) {
                     Toast.makeText(this, "奖励时长请输入数字", Toast.LENGTH_SHORT).show();
                     return;
-                }
-            }
+
+
 
             String missionId = if (missionId == null) return;
 
@@ -343,6 +343,6 @@ public class ChildDetailActivity extends AppCompatActivity implements OnMapReady
         });
         builder.setNegativeButton(R.string.cancel, null);
         builder.show();
-    }
+
     @Override public void onLowMemory() { super.onLowMemory(); mapView.onLowMemory(); }
-}
+

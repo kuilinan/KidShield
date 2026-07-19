@@ -277,13 +277,26 @@ public class ChildDashboardActivity extends AppCompatActivity {
                 }
             }
 
-            String missionId = mDatabase.child("missions").child(currentUid).push().getKey();
-            if (missionId == null) return;
+            String missionId = "mission_" + System.currentTimeMillis();
+            
+            // 通过 API 提交任务
+            try {
+                JSONObject missionData = new JSONObject();
+                missionData.put("title", title);
+                missionData.put("description", desc);
+                missionData.put("reward", reward);
+                missionData.put("status", "child_submit");
 
-            Mission mission = new Mission(missionId, title, desc, reward, "child_submit");
-            mDatabase.child("missions").child(currentUid).child(missionId)
-                    .setValue(mission)
-                    .addOnSuccessListener(aVoid -> {
+                // 用 API 提交
+                String result = apiClient.createMission(
+                    getSharedPreferences("kidshield", MODE_PRIVATE).getString("token", ""),
+                    currentUid, title, desc, reward
+                );
+
+                // 同步保存到本地 CommandStore
+                commandStore.saveMissions(new org.json.JSONArray("[" + result + "]"));
+                
+                runOnUiThread(() -> {
                         Toast.makeText(this, R.string.mission_submitted, Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                     })

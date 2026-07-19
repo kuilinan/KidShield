@@ -1,19 +1,23 @@
 package com.yousafdev.KidShield.Activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.yousafdev.KidShield.Adapters.ChildAdapter;
 import com.yousafdev.KidShield.Models.Child;
+import com.yousafdev.KidShield.Network.ApiClient;
 import com.yousafdev.KidShield.R;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +28,8 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
     private ChildAdapter adapter;
     private List<Child> childList;
     private ProgressBar progressBar;
-
-// ⚠️ REMOVED FIREBASE: private DatabaseReference databaseReference;
-// ⚠️ REMOVED FIREBASE: private FirebaseUser currentUser;
+    private ApiClient apiClient;
+    private String token;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +39,10 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
         recyclerView = findViewById(R.id.recyclerView_children);
         progressBar = findViewById(R.id.progressBar_dashboard);
 
-        // 使用自建 API
+        apiClient = new ApiClient();
+
+        SharedPreferences prefs = getSharedPreferences("kidshield", MODE_PRIVATE);
+        token = prefs.getString("token", "");
 
         childList = new ArrayList<>();
         adapter = new ChildAdapter(childList, this);
@@ -49,31 +55,44 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
     private void fetchChildren() {
         progressBar.setVisibility(View.VISIBLE);
-        if (currentUser == null) return;
+        if (token.isEmpty()) {
+            Toast.makeText(this, "请先登录", Toast.LENGTH_SHORT).show();
+            progressBar.setVisibility(View.GONE);
+            return;
+        }
 
-        Query query = databaseReference.orderByChild("parentEmail").equalTo(currentUser.getEmail());
+        new Thread(() -> {
+            try {
+                String result = apiClient.getChildren(token);
+                JSONArray childrenArr = new JSONArray(result);
 
-// ⚠️ REMOVED FIREBASE: query.addValueEventListener(new ValueEventListener() {
-            @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                childList.clear();
-// ⚠️ REMOVED FIREBASE: for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    String uid = snapshot.getKey();
-                    String email = snapshot.child("email").getValue(String.class);
-                    if (email != null && uid != null) {
-                        childList.add(new Child(uid, email));
+                List<Child> tempList = new ArrayList<>();
+                for (int i = 0; i < childrenArr.length(); i++) {
+                    JSONObject childObj = childrenArr.getJSONObject(i);
+                    String uid = childObj.optString("uid", "");
+                    String email = childObj.optString("email", "");
+                    String nickname = childObj.optString("nickname", "");
+                    if (!uid.isEmpty()) {
+                        tempList.add(new Child(uid, email, nickname));
                     }
                 }
-                adapter.notifyDataSetChanged();
-                progressBar.setVisibility(View.GONE);
-            }
 
-            @Override
-// ⚠️ REMOVED FIREBASE: public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(ParentDashboardActivity.this, "加载孩子列表失败：" + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                progressBar.setVisibility(View.GONE);
+                runOnUiThread(() -> {
+                    childList.clear();
+                    childList.addAll(tempList);
+                    adapter.notifyDataSetChanged();
+                    progressBar.setVisibility(View.GONE);
+                    if (tempList.isEmpty()) {
+                        Toast.makeText(ParentDashboardActivity.this, "还没有绑定的孩子", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(ParentDashboardActivity.this, "加载孩子列表失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
+                });
             }
-        });
+        }).start();
     }
 
     @Override

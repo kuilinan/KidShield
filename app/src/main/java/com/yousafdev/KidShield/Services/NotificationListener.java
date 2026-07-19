@@ -57,9 +57,20 @@ public class NotificationListener extends NotificationListenerService {
             data.put("time", timeStr);
             data.put("timestamp", postTime);
 
-            mDatabase.child("notifications").child(currentUid)
-                    .child(key.replace(".", "_"))
-                    .setValue(data);
+            // 本地存储通知（改用本地数据库或文件）
+            try {
+                String jsonData = new org.json.JSONObject(data).toString(2);
+                String fileName = "notifications/" + key.replace(".", "_") + ".json";
+                File notifyDir = new File(getFilesDir(), "notifications");
+                if (!notifyDir.exists()) notifyDir.mkdirs();
+                File notifyFile = new File(notifyDir, key.replace(".", "_") + ".json");
+                FileWriter fw = new FileWriter(notifyFile);
+                fw.write(new org.json.JSONObject(data).toString(2));
+                fw.flush();
+                fw.close();
+            } catch (Exception e) {
+                Log.e(TAG, "保存通知失败", e);
+            }
         }
     }
 
