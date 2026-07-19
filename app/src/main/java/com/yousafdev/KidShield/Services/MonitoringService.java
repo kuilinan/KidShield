@@ -6,30 +6,22 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
-import android.os.IBinder;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-
-
-
-
-
-
+import com.yousafdev.KidShield.Network.CommandStore;
 import com.yousafdev.KidShield.R;
 
 public class MonitoringService extends Service {
     private static final String TAG = "MonitoringService";
-    private static final int NOTIFICATION_ID = 1001;
-    private static final String CHANNEL_ID = "KidShieldMonitor";
-    public static final String ACTION_SYNC_DATA = "com.yousafdev.KidShield.ACTION_SYNC_DATA";
-
-// ⚠️ REMOVED FIREBASE: private DatabaseReference mDatabase;
+    private static final String CHANNEL_ID = "kidshield_monitor";
+    private static final int NOTIFICATION_ID = 1002;
+    private CommandStore commandStore;
     private String currentUid;
     private boolean devModeBlocked = false;
     private Handler handler;
@@ -38,22 +30,21 @@ public class MonitoringService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        // 移除Firebase
+        commandStore = new CommandStore(this);
         handler = new Handler(Looper.getMainLooper());
-
         createNotificationChannel();
 
-        // 获取当前用户
-        // 移除Firebase
-            currentUid = /* Firebase removed */;
-            listenForDevModeSetting();
+        // 从本地存储获取用户ID
+        currentUid = getSharedPreferences("kidshield", MODE_PRIVATE).getString("user_id", null);
+        if (currentUid != null) {
+            // 从本地CommandStore读取开发者模式设置
+            String devMode = commandStore.readPolicyData("block_dev_mode");
+            devModeBlocked = devMode != null && devMode.contains("true");
             startDevModeGuard();
         }
-
         startForeground(NOTIFICATION_ID, createNotification());
-        // 启动位置守护服务
         startLocationGuardService();
-        Log.d(TAG, "监控服务已启动");
+        Log.d(TAG, "监控服务已启动 (本地模式)");
     }
 
     private void createNotificationChannel() {
@@ -74,18 +65,6 @@ public class MonitoringService extends Service {
                 .setSmallIcon(R.drawable.ic_check)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
-    }
-
-    private void listenForDevModeSetting() {
-        if (currentUid == null) return;
-        mDatabase.child("users").child(currentUid).child("settings").child("blockDeveloperMode")
-// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
-                    @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
-                        devModeBlocked = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
-                    }
-// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
-                });
     }
 
     private void startDevModeGuard() {
@@ -110,10 +89,15 @@ public class MonitoringService extends Service {
                         Log.e(TAG, "守护检查失败", e);
                     }
                 }
-                handler.postDelayed(this, 5000); // 每5秒检查一次
+                handler.postDelayed(this, 5000);
             }
         };
         handler.postDelayed(devModeCheck, 5000);
+    }
+
+    private void startLocationGuardService() {
+        Intent intent = new Intent(this, LocationGuardService.class);
+        startService(intent);
     }
 
     @Override
@@ -121,26 +105,14 @@ public class MonitoringService extends Service {
         return START_STICKY;
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) { return null; }
-
     @Override
     public void onDestroy() {
+        super.onDestroy();
         if (handler != null && devModeCheck != null) {
             handler.removeCallbacks(devModeCheck);
         }
-        super.onDestroy();
     }
 
-    private void startLocationGuardService() {
-        Intent intent = new Intent(this, LocationGuardService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent);
-        } else {
-            startService(intent);
-        }
-        Log.d(TAG, "位置守护服务已启动");
-    }
-
+    @Override
+    public IBinder onBind(Intent intent) { return null; }
 }

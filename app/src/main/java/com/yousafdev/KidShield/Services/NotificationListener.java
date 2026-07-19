@@ -16,13 +16,12 @@ import java.util.Map;
 
 public class NotificationListener extends NotificationListenerService {
     private static final String TAG = "NotificationListener";
-// ⚠️ REMOVED FIREBASE: private DatabaseReference mDatabase;
     private String currentUid;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mDatabase = null; // Firebase移除
+        // Firebase已移除
         String savedUid = getSharedPreferences("kidshield", MODE_PRIVATE).getString("user_id", null); if (savedUid != null) {
             currentUid = savedUid;
         }

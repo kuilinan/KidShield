@@ -30,11 +30,13 @@ public class AppAccessibilityService extends AccessibilityService {
 
     private CommandStore commandStore;
     private String currentChildUid;
+    private java.util.List<String> whitelistApps = new java.util.ArrayList<>();
+    private boolean whitelistMode = false;
+    private boolean blockDeveloperMode = false;
     private Set<String> whitelistApps = new HashSet<>();
     private Set<String> systemApps = new HashSet<>();
     private boolean whitelistMode = true;
     private boolean devModeBlocked = false;
-// ⚠️ REMOVED FIREBASE: private ValueEventListener whitelistListener;
     private String lastBlockedPackage = "";
     private long lastBlockedTime = 0;
 
@@ -69,9 +71,7 @@ public class AppAccessibilityService extends AccessibilityService {
     private void detectCurrentUser() {
         // 从本地存储读取策略（家长通过指令同步存储到文件）
         // 设备绑定的孩子UID由登录时保存
-// ⚠️ REMOVED FIREBASE: deviceRef.child("childUid").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                 String uid = snapshot.getValue(String.class);
                 if (uid != null) {
                     currentChildUid = uid;
@@ -79,7 +79,6 @@ public class AppAccessibilityService extends AccessibilityService {
                     startListeningForDevMode();
                 }
             }
-// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
         });
     }
 
@@ -88,22 +87,16 @@ public class AppAccessibilityService extends AccessibilityService {
 
         // 监听白名单模式开关
         mDatabase.child("users").child(currentChildUid).child("settings").child("whitelistMode")
-// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
                     @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                         whitelistMode = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
                         Log.d(TAG, "白名单模式: " + whitelistMode);
                     }
-// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
                 });
 
         // 监听白名单应用
         whitelistListener = mDatabase.child("users").child(currentChildUid).child("whitelist_apps")
-// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
                     @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                         whitelistApps.clear();
-// ⚠️ REMOVED FIREBASE: for (DataSnapshot appSnapshot : snapshot.getChildren()) {
                             Boolean allowed = appSnapshot.getValue(Boolean.class);
                             if (allowed != null && allowed) {
                                 String pkg = appSnapshot.getKey().replace("_", ".");
@@ -112,23 +105,19 @@ public class AppAccessibilityService extends AccessibilityService {
                         }
                         Log.d(TAG, "白名单更新: " + whitelistApps.size() + " 个应用");
                     }
-// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
                 });
     }
 
     private void startListeningForDevMode() {
         if (currentChildUid == null) return;
         mDatabase.child("users").child(currentChildUid).child("settings").child("blockDeveloperMode")
-// ⚠️ REMOVED FIREBASE: .addValueEventListener(new ValueEventListener() {
                     @Override
-// ⚠️ REMOVED FIREBASE: public void onDataChange(DataSnapshot snapshot) {
                         devModeBlocked = snapshot.getValue(Boolean.class) != null && snapshot.getValue(Boolean.class);
                         Log.d(TAG, "开发者模式封锁: " + devModeBlocked);
                         if (devModeBlocked) {
                             enforceDevModeBlock();
                         }
                     }
-// ⚠️ REMOVED FIREBASE: @Override public void onCancelled(DatabaseError error) {}
                 });
     }
 
