@@ -62,9 +62,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/button_mission_approval" />
 
-        <!-- 加时长申请按钮 -->
-        <Button
-            android:id="@+id/button_time_requests"
         <!-- 布置任务按钮 -->
         <Button
             android:id="@+id/button_assign_mission"
@@ -72,16 +69,23 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/assign_new_mission"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/kidshield_yellow"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button_assign_mission" />
+            app:layout_constraintTop_toBottomOf="@+id/button_mission_approval" />
+
+        <!-- 加时长申请按钮 -->
+        <Button
+            android:id="@+id/button_time_requests"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/time_requests"
+            android:textAllCaps="false"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button_mission_approval" />
+            app:layout_constraintTop_toBottomOf="@+id/button_assign_mission" />
 
         <TextView
             android:id="@+id/textView_pending_time_requests"
@@ -92,16 +96,6 @@
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/button_time_requests" />
-        <!-- 布置任务按钮 -->
-        <Button
-            android:id="@+id/button_assign_mission"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/assign_new_mission"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button_assign_mission" />
 
         <!-- 地图 -->
         <com.google.android.gms.maps.MapView
@@ -109,16 +103,6 @@
             android:layout_width="0dp"
             android:layout_height="200dp"
             android:layout_marginTop="12dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button_assign_mission" />
-        <!-- 布置任务按钮 -->
-        <Button
-            android:id="@+id/button_assign_mission"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/assign_new_mission"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/button_assign_mission" />
