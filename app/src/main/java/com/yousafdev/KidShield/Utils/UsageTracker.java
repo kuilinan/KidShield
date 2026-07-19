@@ -130,13 +130,6 @@ public class UsageTracker {
         calendar.set(Calendar.MILLISECOND, 0);
         long startTime = calendar.getTimeInMillis();
 
-        UsageStats queryUsageStats = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY, startTime, System.currentTimeMillis());
-        
-        if (queryUsageStats != null) {
-            // 直接查询单个应用
-        }
-        
         Map<String, UsageStats> stats = usageStatsManager.queryAndAggregateUsageStats(startTime, System.currentTimeMillis());
         if (stats != null && stats.containsKey(packageName)) {
             return stats.get(packageName).getTotalTimeInForeground();

@@ -27,6 +27,7 @@ public class MonitoringService extends Service {
     private static final String TAG = "MonitoringService";
     private static final int NOTIFICATION_ID = 1001;
     private static final String CHANNEL_ID = "KidShieldMonitor";
+    public static final String ACTION_SYNC_DATA = "com.yousafdev.KidShield.ACTION_SYNC_DATA";
 
     private DatabaseReference mDatabase;
     private String currentUid;
@@ -131,4 +132,15 @@ public class MonitoringService extends Service {
         }
         super.onDestroy();
     }
+
+    private void startLocationGuardService() {
+        Intent intent = new Intent(this, LocationGuardService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
+        Log.d(TAG, "位置守护服务已启动");
+    }
+
 }
