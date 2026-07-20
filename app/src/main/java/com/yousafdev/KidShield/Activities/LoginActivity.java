@@ -122,6 +122,23 @@ public class LoginActivity extends AppCompatActivity {
         new Thread(() -> {
             try {
                 JSONObject result = ApiClient.getInstance().login(email, password);
+                // 检查后端是否返回了错误信息（如账号不存在/密码错误）
+                if (result.has("error")) {
+                    String errMsg = result.optString("error", "未知错误");
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(LoginActivity.this, "登录失败: " + errMsg, Toast.LENGTH_LONG).show();
+                    });
+                    return;
+                }
+                // 安全获取 token，避免 JSONException
+                if (!result.has("token") || !result.has("user")) {
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(LoginActivity.this, "服务器响应异常，请稍后重试", Toast.LENGTH_LONG).show();
+                    });
+                    return;
+                }
                 String token = result.getString("token");
                 JSONObject user = result.getJSONObject("user");
                 String role = user.getString("role");
