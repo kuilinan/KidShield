@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">KidShield</string>
+    <string name="app_name">KidShield 儿童守护</string>
     <string name="app_name_parent">KidShield 家长端</string>
     <string name="app_name_child">KidShield 孩子端</string>
     <string name="accessibility_service_description">KidShield 使用无障碍服务监控当前运行的应用，以帮助家长保护孩子的安全，拦截未经允许的应用。</string>
