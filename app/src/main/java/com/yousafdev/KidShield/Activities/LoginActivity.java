@@ -127,8 +127,9 @@ public class LoginActivity extends AppCompatActivity {
                 String role = user.getString("role");
                 String id = user.getString("id");
 
-                // 保存登录信息
+                // 保存登录信息（注意 key 名要和其他 Activity 一致）
                 prefs.edit()
+                    .putString("token", token)
                     .putString("auth_token", token)
                     .putString("user_role", role)
                     .putString("user_id", id)
