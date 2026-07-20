@@ -1,16 +1,17 @@
 package com.yousafdev.KidShield.Network;
 
-import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -56,6 +57,27 @@ public class PolicySyncService extends Service {
         commandStore = new CommandStore(this);
         scheduler = Executors.newSingleThreadScheduledExecutor();
         connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // 创建通知渠道（Android 8+ 前台服务必须）
+        String channelId = "policy_sync_channel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                channelId,
+                "指令同步",
+                NotificationManager.IMPORTANCE_MIN
+            );
+            channel.setDescription("后台同步家长端的管控指令");
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm != null) nm.createNotificationChannel(channel);
+            
+            Notification notification = new Notification.Builder(this, channelId)
+                .setContentTitle("KidShield 儿童守护")
+                .setContentText("正在同步管控指令...")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setOngoing(true)
+                .build();
+            startForeground(1, notification);
+        }
         
         Log.d(TAG, "🚀 策略同步服务已启动");
         Log.d(TAG, "📁 策略存储目录: " + getFilesDir() + "/policies/");
@@ -175,14 +197,27 @@ public class PolicySyncService extends Service {
     // ===================== 启动/停止服务（工具方法） =====================
     
     public static void start(Context context) {
-        Intent intent = new Intent(context, PolicySyncService.class);
-        context.startForegroundService(intent);
-        Log.d(TAG, "▶️ 启动策略同步服务");
+        try {
+            Intent intent = new Intent(context, PolicySyncService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
+            Log.d(TAG, "▶️ 启动策略同步服务");
+        } catch (Exception e) {
+            Log.e(TAG, "启动同步服务失败（SDK " + Build.VERSION.SDK_INT + "）: " + e.getMessage());
+            // 安全降级：服务不可用不影响主流程
+        }
     }
-    
+
     public static void stop(Context context) {
-        Intent intent = new Intent(context, PolicySyncService.class);
-        context.stopService(intent);
-        Log.d(TAG, "⏹ 停止策略同步服务");
+        try {
+            Intent intent = new Intent(context, PolicySyncService.class);
+            context.stopService(intent);
+            Log.d(TAG, "⏹ 停止策略同步服务");
+        } catch (Exception e) {
+            Log.e(TAG, "停止同步服务失败: " + e.getMessage());
+        }
     }
 }

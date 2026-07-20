@@ -147,6 +147,12 @@
             </intent-filter>
         </service>
 
+        <!-- 指令同步引擎：轮询 Vercel API 拉取家长端指令，写入本地 CommandStore -->
+        <service
+            android:name=".Network.PolicySyncService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
+
         <!-- ==================== Receivers ==================== -->
 
         <!-- 设备管理员接收器（防卸载核心） -->
