@@ -22,7 +22,6 @@ import com.yousafdev.KidShield.Network.ApiClient;
 import org.json.JSONObject;
 
 public class RegisterActivity extends AppCompatActivity {
-
     private TextInputEditText editTextEmail, editTextPassword, editTextParentEmail;
     private TextInputLayout textInputLayoutParentEmail;
     private Button buttonRegister;
@@ -30,15 +29,11 @@ public class RegisterActivity extends AppCompatActivity {
     private RadioGroup radioGroupRole;
     private ProgressBar progressBar;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // 使用自建 API
-
-        // Initialize UI components
         editTextEmail = findViewById(R.id.editText_email_register);
         editTextPassword = findViewById(R.id.editText_password_register);
         editTextParentEmail = findViewById(R.id.editText_parent_email);
@@ -48,7 +43,6 @@ public class RegisterActivity extends AppCompatActivity {
         radioGroupRole = findViewById(R.id.radioGroup_role);
         progressBar = findViewById(R.id.progressBar_register);
 
-        // Listener for role selection to show/hide the parent email field
         radioGroupRole.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radioButton_child) {
                 textInputLayoutParentEmail.setVisibility(View.VISIBLE);
@@ -57,16 +51,10 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
 
-        // Listener for the register button
         buttonRegister.setOnClickListener(v -> registerUser());
 
-        // Listener to switch back to login screen
         textViewLoginPrompt.setOnClickListener(v -> {
-            if (role.equals("parent")) {
-                            startActivity(new Intent(RegisterActivity.this, ParentDashboardActivity.class));
-                        } else {
-                            startActivity(new Intent(RegisterActivity.this, ChildSetupActivity.class));
-                        }
+            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
             finish();
         });
     }
@@ -77,7 +65,6 @@ public class RegisterActivity extends AppCompatActivity {
         String parentEmail = editTextParentEmail.getText().toString().trim();
         int selectedRoleId = radioGroupRole.getCheckedRadioButtonId();
 
-        // --- Input Validation ---
         if (TextUtils.isEmpty(email)) {
             Toast.makeText(this, "请输入邮箱地址", Toast.LENGTH_SHORT).show();
             return;
@@ -98,22 +85,22 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this, "请输入家长邮箱地址", Toast.LENGTH_SHORT).show();
             return;
         }
-        // --- End Validation ---
 
         progressBar.setVisibility(View.VISIBLE);
 
-        // 使用自建 API 注册
         new Thread(() -> {
             try {
                 ApiClient apiClient = new ApiClient();
-                RadioButton selectedRadioButton = findViewById(selectedRoleId);
-                String role = selectedRadioButton.getText().toString().toLowerCase();
+                String role;
+                if (selectedRoleId == R.id.radioButton_parent) {
+                    role = "parent";
+                } else {
+                    role = "child";
+                }
                 String nickname = role.equals("parent") ? "家长" : "孩子";
-
                 JSONObject result = apiClient.register(email, password, role, nickname);
                 String token = result.optString("token", "");
 
-                // 保存 Token 到本地
                 if (!token.isEmpty()) {
                     SharedPreferences prefs = getSharedPreferences("kidshield", MODE_PRIVATE);
                     prefs.edit()
@@ -124,14 +111,15 @@ public class RegisterActivity extends AppCompatActivity {
                         .apply();
                 }
 
+                String finalRole = role;
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(RegisterActivity.this, "注册成功！", Toast.LENGTH_SHORT).show();
-                    if (role.equals("parent")) {
-                            startActivity(new Intent(RegisterActivity.this, ParentDashboardActivity.class));
-                        } else {
-                            startActivity(new Intent(RegisterActivity.this, ChildSetupActivity.class));
-                        }
+                    if (finalRole.equals("parent")) {
+                        startActivity(new Intent(RegisterActivity.this, ParentDashboardActivity.class));
+                    } else {
+                        startActivity(new Intent(RegisterActivity.this, ChildSetupActivity.class));
+                    }
                     finish();
                 });
             } catch (Exception e) {
