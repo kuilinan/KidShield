@@ -4,13 +4,16 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.yousafdev.KidShield.Adapters.ChildAdapter;
 import com.yousafdev.KidShield.Models.Child;
 import com.yousafdev.KidShield.Network.ApiClient;
@@ -27,6 +30,8 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
     private ChildAdapter adapter;
     private List<Child> childList;
     private ProgressBar progressBar;
+    private TextView textViewEmptyState;
+    private FloatingActionButton fabAddChild;
     private ApiClient apiClient;
     private String token;
 
@@ -37,6 +42,8 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
         recyclerView = findViewById(R.id.recyclerView_children);
         progressBar = findViewById(R.id.progressBar_dashboard);
+        textViewEmptyState = findViewById(R.id.textView_empty_state);
+        fabAddChild = findViewById(R.id.fab_add_child);
 
         apiClient = new ApiClient();
         SharedPreferences prefs = getSharedPreferences("kidshield", MODE_PRIVATE);
@@ -48,6 +55,12 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+
+        fabAddChild.setOnClickListener(v -> {
+            Intent intent = new Intent(this, BindChildActivity.class);
+            startActivity(intent);
+        });
+
         fetchChildren();
     }
 
@@ -64,7 +77,10 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
                 JSONObject respObj = new JSONObject(result);
                 JSONArray childrenArr = respObj.optJSONArray("children");
                 if (childrenArr == null) {
-                    runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        textViewEmptyState.setVisibility(View.VISIBLE);
+                    });
                     return;
                 }
                 List<Child> tempList = new ArrayList<>();
@@ -83,7 +99,9 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
                     adapter.notifyDataSetChanged();
                     progressBar.setVisibility(View.GONE);
                     if (tempList.isEmpty()) {
-                        Toast.makeText(ParentDashboardActivity.this, "还没有绑定的孩子", Toast.LENGTH_SHORT).show();
+                        textViewEmptyState.setVisibility(View.VISIBLE);
+                    } else {
+                        textViewEmptyState.setVisibility(View.GONE);
                     }
                 });
             } catch (Exception e) {
@@ -93,6 +111,12 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
                 });
             }
         }).start();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchChildren();
     }
 
     @Override

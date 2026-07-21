@@ -203,5 +203,8 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="YOUR_API_KEY_HERE" />
 
+            <activity android:name=".Activities.BindChildActivity"
+            android:exported="false"
+            android:parentActivityName=".Activities.ParentDashboardActivity" />
     </application>
 </manifest>
