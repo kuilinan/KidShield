@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParentDashboardActivity extends AppCompatActivity implements ChildAdapter.OnChildListener {
-
     private RecyclerView recyclerView;
     private ChildAdapter adapter;
     private List<Child> childList;
@@ -40,7 +39,6 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
         progressBar = findViewById(R.id.progressBar_dashboard);
 
         apiClient = new ApiClient();
-
         SharedPreferences prefs = getSharedPreferences("kidshield", MODE_PRIVATE);
         token = prefs.getString("token", "");
         apiClient.setToken(token);
@@ -50,7 +48,6 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
-
         fetchChildren();
     }
 
@@ -61,24 +58,25 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
             progressBar.setVisibility(View.GONE);
             return;
         }
-
         new Thread(() -> {
             try {
                 String result = apiClient.getChildren().toString();
-                JSONArray childrenArr = new JSONArray(result);
-
+                JSONObject respObj = new JSONObject(result);
+                JSONArray childrenArr = respObj.optJSONArray("children");
+                if (childrenArr == null) {
+                    runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                    return;
+                }
                 List<Child> tempList = new ArrayList<>();
                 for (int i = 0; i < childrenArr.length(); i++) {
                     JSONObject childObj = childrenArr.getJSONObject(i);
-                    String uid = childObj.optString("uid", "");
+                    String id = childObj.optString("id", "");
                     String email = childObj.optString("email", "");
-                    String nickname = childObj.optString("nickname", "");
-                    if (!uid.isEmpty()) {
-                        Child child = new Child(uid, email);
+                    if (!id.isEmpty()) {
+                        Child child = new Child(id, email);
                         tempList.add(child);
                     }
                 }
-
                 runOnUiThread(() -> {
                     childList.clear();
                     childList.addAll(tempList);

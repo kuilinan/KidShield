@@ -62,7 +62,11 @@ public class RegisterActivity extends AppCompatActivity {
 
         // Listener to switch back to login screen
         textViewLoginPrompt.setOnClickListener(v -> {
-            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+            if (role.equals("parent")) {
+                            startActivity(new Intent(RegisterActivity.this, ParentDashboardActivity.class));
+                        } else {
+                            startActivity(new Intent(RegisterActivity.this, ChildSetupActivity.class));
+                        }
             finish();
         });
     }
@@ -123,7 +127,11 @@ public class RegisterActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(RegisterActivity.this, "注册成功！", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                    if (role.equals("parent")) {
+                            startActivity(new Intent(RegisterActivity.this, ParentDashboardActivity.class));
+                        } else {
+                            startActivity(new Intent(RegisterActivity.this, ChildSetupActivity.class));
+                        }
                     finish();
                 });
             } catch (Exception e) {
