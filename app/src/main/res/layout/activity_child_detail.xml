@@ -97,15 +97,56 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/button_time_requests" />
 
-        <!-- 地图 -->
-        <com.google.android.gms.maps.MapView
-            android:id="@+id/mapView"
+        <!-- 位置信息（非Google Maps，纯文本，中国设备通用） -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_location"
             android:layout_width="0dp"
-            android:layout_height="200dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/kidshield_surface_dark"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button_assign_mission" />
+            app:layout_constraintTop_toBottomOf="@+id/button_assign_mission">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📍 位置信息"
+                    android:textColor="@color/kidshield_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/textView_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="等待定位..."
+                    android:textColor="@color/kidshield_text_secondary"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/textView_location_address"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text=""
+                    android:textColor="@color/kidshield_text_secondary"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/textView_location_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text=""
+                    android:textColor="@color/kidshield_text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <TextView
             android:layout_width="0dp"
@@ -117,7 +158,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/mapView" />
+            app:layout_constraintTop_toBottomOf="@+id/card_location" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView_call_logs"

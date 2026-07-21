@@ -2,53 +2,55 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E6000000"
+    android:background="#CC1A202C"
     android:clickable="true"
     android:focusable="true">
 
     <LinearLayout
-        android:layout_width="280dp"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:gravity="center"
         android:orientation="vertical"
         android:background="@android:color/white"
-        android:padding="24dp"
+        android:padding="28dp"
         android:clickable="true"
-        android:elevation="8dp">
-
-        <ImageView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:src="@android:drawable/ic_dialog_alert"
-            android:layout_marginBottom="12dp"
-            android:contentDescription="提示" />
+        android:elevation="12dp"
+        android:radius="16dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="当前应用已被家长限制"
-            android:textSize="18sp"
-            android:textColor="#D32F2F"
-            android:textStyle="bold"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:text="🔒"
+            android:textSize="36sp"
+            android:gravity="center"
             android:layout_marginBottom="8dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="如需帮助请联系家长"
+            android:text="已开启保护"
+            android:textSize="20sp"
+            android:textColor="#1A202C"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="该操作已被家长限制"
             android:textSize="14sp"
-            android:textColor="#666666"
+            android:textColor="#718096"
             android:layout_marginBottom="20dp" />
 
         <Button
             android:id="@+id/btn_overlay_ok"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="46dp"
             android:text="我知道了"
             android:textSize="16sp"
             android:textColor="@android:color/white"
-            android:background="#1976D2"
+            android:background="@drawable/btn_blue_rounded"
             android:gravity="center" />
 
     </LinearLayout>

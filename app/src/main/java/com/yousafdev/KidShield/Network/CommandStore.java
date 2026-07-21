@@ -404,4 +404,144 @@ public class CommandStore {
         reader.close();
         return sb.toString();
     }
+
+
+    // ===================== 禁令持久化（本地存储，断网有效，重启不丢） =====================
+
+    /**
+     * 保存单条禁令规则
+     * @param packageName 应用包名
+     * @param durationMinutes 禁止时长（分钟），0=永久
+     * @param reason 原因
+     */
+    public void saveBlockRule(String packageName, int durationMinutes, String reason) {
+        try {
+            editor = prefs.edit();
+            JSONObject rule = new JSONObject();
+            rule.put("packageName", packageName);
+            rule.put("durationMinutes", durationMinutes);
+            rule.put("reason", reason != null ? reason : "");
+            rule.put("timestamp", System.currentTimeMillis());
+            rule.put("expireAt", durationMinutes > 0 ? System.currentTimeMillis() + (durationMinutes * 60 * 1000L) : 0);
+
+            // 读取已有禁令列表
+            JSONArray rules = getBlockRules();
+            // 如果已存在同名包名，更新
+            boolean updated = false;
+            for (int i = 0; i < rules.length(); i++) {
+                JSONObject existing = rules.getJSONObject(i);
+                if (existing.getString("packageName").equals(packageName)) {
+                    rules.put(i, rule);
+                    updated = true;
+                    break;
+                }
+            }
+            if (!updated) {
+                rules.put(rule);
+            }
+            editor.putString("block_rules", rules.toString());
+            editor.apply();
+
+            // 发送广播通知无障碍服务更新
+            Intent intent = new Intent("com.yousafdev.KidShield.UPDATE_WHITELIST");
+            context.sendBroadcast(intent);
+
+            Log.d(TAG, "禁令已保存: " + packageName + " 时长=" + durationMinutes + "min");
+        } catch (Exception e) {
+            Log.e(TAG, "保存禁令失败", e);
+        }
+    }
+
+    /**
+     * 获取所有禁令规则
+     */
+    public JSONArray getBlockRules() {
+        try {
+            String json = prefs.getString("block_rules", "[]");
+            return new JSONArray(json);
+        } catch (Exception e) {
+            return new JSONArray();
+        }
+    }
+
+    /**
+     * 检查某个应用当前是否被禁止
+     * @param packageName 应用包名
+     * @return true=被禁止，false=可正常使用
+     */
+    public boolean isAppBlocked(String packageName) {
+        try {
+            JSONArray rules = getBlockRules();
+            long now = System.currentTimeMillis();
+            for (int i = 0; i < rules.length(); i++) {
+                JSONObject rule = rules.getJSONObject(i);
+                if (rule.getString("packageName").equals(packageName)) {
+                    long expireAt = rule.optLong("expireAt", 0);
+                    // expireAt=0 表示永久禁止
+                    if (expireAt == 0 || expireAt > now) {
+                        return true;
+                    } else {
+                        // 已过期，自动移除
+                        rules.remove(i);
+                        editor = prefs.edit();
+                        editor.putString("block_rules", rules.toString());
+                        editor.apply();
+                        return false;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "检查禁令状态失败", e);
+        }
+        return false;
+    }
+
+    /**
+     * 移除禁令（解禁）
+     * @param packageName 应用包名，传"*"表示清空所有
+     */
+    public void removeBlockRule(String packageName) {
+        try {
+            JSONArray rules = getBlockRules();
+            JSONArray newRules = new JSONArray();
+            for (int i = 0; i < rules.length(); i++) {
+                JSONObject rule = rules.getJSONObject(i);
+                if ("*".equals(packageName) || !rule.getString("packageName").equals(packageName)) {
+                    newRules.put(rule);
+                }
+            }
+            editor = prefs.edit();
+            editor.putString("block_rules", newRules.toString());
+            editor.apply();
+
+            Intent intent = new Intent("com.yousafdev.KidShield.UPDATE_WHITELIST");
+            context.sendBroadcast(intent);
+
+            Log.d(TAG, "禁令已移除: " + packageName);
+        } catch (Exception e) {
+            Log.e(TAG, "移除禁令失败", e);
+        }
+    }
+
+    /**
+     * 获取所有被禁止应用的包名列表（不含已过期的）
+     */
+    public List<String> getBlockedPackageNames() {
+        List<String> blocked = new ArrayList<>();
+        try {
+            JSONArray rules = getBlockRules();
+            long now = System.currentTimeMillis();
+            for (int i = 0; i < rules.length(); i++) {
+                JSONObject rule = rules.getJSONObject(i);
+                long expireAt = rule.optLong("expireAt", 0);
+                if (expireAt == 0 || expireAt > now) {
+                    blocked.add(rule.getString("packageName"));
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "获取被禁包名列表失败", e);
+        }
+        return blocked;
+    }
+
 }

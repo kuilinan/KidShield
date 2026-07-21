@@ -1,5 +1,11 @@
 package com.yousafdev.KidShield.Activities;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -8,6 +14,7 @@ import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.yousafdev.KidShield.Models.Mission;
 import com.yousafdev.KidShield.Network.ApiClient;
@@ -17,10 +24,13 @@ import com.yousafdev.KidShield.R;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
-public class ChildDetailActivity extends AppCompatActivity {
+public class ChildDetailActivity extends AppCompatActivity implements LocationListener {
 
     private CommandStore commandStore;
     private ApiClient apiClient;
@@ -28,6 +38,10 @@ public class ChildDetailActivity extends AppCompatActivity {
     private String childEmail;
     private TextView missionCountView;
     private TextView timeRequestCountView;
+    private TextView textViewLocation;
+    private TextView textViewLocationAddress;
+    private TextView textViewLocationTime;
+    private LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +56,23 @@ public class ChildDetailActivity extends AppCompatActivity {
 
         missionCountView = findViewById(R.id.textView_pending_missions);
         timeRequestCountView = findViewById(R.id.textView_pending_time_requests);
+        textViewLocation = findViewById(R.id.textView_location);
+        textViewLocationAddress = findViewById(R.id.textView_location_address);
+        textViewLocationTime = findViewById(R.id.textView_location_time);
 
         loadPendingCounts();
+        startLocationUpdates();
+
+        // 管理应用按钮 → 跳转AppBlocker
+        Button manageAppsBtn = findViewById(R.id.button_manage_apps);
+        if (manageAppsBtn != null) {
+            manageAppsBtn.setOnClickListener(v -> {
+                Intent intent = new Intent(this, AppBlockerActivity.class);
+                intent.putExtra("CHILD_UID", childUid);
+                intent.putExtra("CHILD_EMAIL", childEmail);
+                startActivity(intent);
+            });
+        }
 
         Button approveMissionsBtn = findViewById(R.id.button_mission_approval);
         if (approveMissionsBtn != null) {
@@ -53,6 +82,87 @@ public class ChildDetailActivity extends AppCompatActivity {
         Button assignMissionBtn = findViewById(R.id.button_assign_mission);
         if (assignMissionBtn != null) {
             assignMissionBtn.setOnClickListener(v -> showAssignMissionDialog());
+        }
+    }
+
+    /**
+     * 使用标准Android LocationManager获取位置（非Google Maps）
+     * GPS/基站/WiFi定位，所有中国设备通用
+     */
+    private void startLocationUpdates() {
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (locationManager == null) return;
+
+        // 检查权限
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            textViewLocation.setText("位置权限未授予");
+            return;
+        }
+
+        // 获取上次已知位置
+        Location lastKnown = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (lastKnown == null) {
+            lastKnown = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+        if (lastKnown != null) {
+            onLocationChanged(lastKnown);
+        }
+
+        // 请求位置更新
+        try {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60000, 100, this);
+        } catch (Exception e) {
+            try {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 60000, 100, this);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if (location == null) return;
+        double lat = location.getLatitude();
+        double lng = location.getLongitude();
+        textViewLocation.setText(String.format(Locale.CHINA, "📍 %.6f, %.6f", lat, lng));
+
+        // 用Geocoder反查地址（可选，网络请求）
+        try {
+            android.location.Geocoder geocoder = new android.location.Geocoder(this, Locale.CHINA);
+            List<android.location.Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                android.location.Address addr = addresses.get(0);
+                String addrText = "";
+                if (addr.getLocality() != null) addrText += addr.getLocality();
+                if (addr.getSubLocality() != null) addrText += " " + addr.getSubLocality();
+                if (addr.getFeatureName() != null) addrText += " " + addr.getFeatureName();
+                if (!addrText.isEmpty()) textViewLocationAddress.setText(addrText);
+            }
+        } catch (Exception e) {
+            // Geocoder可能不可用，忽略
+        }
+
+        // 更新时间
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.CHINA);
+        textViewLocationTime.setText("更新于 " + sdf.format(new Date()));
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+    @Override
+    public void onProviderEnabled(String provider) {}
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        textViewLocation.setText("定位已关闭");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (locationManager != null) {
+            try { locationManager.removeUpdates(this); } catch (Exception ignored) {}
         }
     }
 

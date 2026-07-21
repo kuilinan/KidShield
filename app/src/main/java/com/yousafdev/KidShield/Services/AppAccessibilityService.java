@@ -146,17 +146,15 @@ public class AppAccessibilityService extends AccessibilityService {
     }
 
     /**
-     * 检测是否进入卸载/设置相关页面
-     * 包括：系统设置卸载界面、PackageInstaller卸载确认界面
+     * 检测是否进入卸载相关页面
+     * 只拦截真正的卸载确认弹窗，不拦截"应用信息"和"管理应用"列表
      */
     private boolean isUninstallOrSettingsPage(String packageName, String className) {
-        // 1. 系统设置里的应用详情页（卸载入口）
+        // 1. 只拦截系统设置的卸载确认对话框（不拦截应用信息页）
         if ("com.android.settings".equals(packageName)) {
-            if (className.contains("InstalledAppDetails") ||
-                className.contains("ApplicationDetail") ||
-                className.contains("ManageApplications") ||
-                className.contains("Uninstall") ||
-                className.contains("AlertDialog")) {
+            if (className.contains("Uninstall") &&
+                !className.contains("InstalledAppDetails") &&
+                !className.contains("ApplicationDetail")) {
                 return true;
             }
         }
@@ -164,16 +162,13 @@ public class AppAccessibilityService extends AccessibilityService {
         if ("com.android.packageinstaller".equals(packageName) ||
             "com.google.android.packageinstaller".equals(packageName)) {
             if (className.contains("Uninstall") ||
-                className.contains("AlertDialog") ||
-                className.contains("PackageInstallerActivity")) {
+                className.contains("UninstallAlertDialog")) {
                 return true;
             }
         }
-        // 3. 三星/小米/OPPO等厂商包安装器
-        if (packageName.contains("packageinstaller") || packageName.contains("permissioncontroller")) {
-            if (className.contains("Uninstall") || className.contains("AlertDialog")) {
-                return true;
-            }
+        // 3. 其他厂商包安装器
+        if (packageName.contains("packageinstaller") && className.contains("Uninstall")) {
+            return true;
         }
         return false;
     }
