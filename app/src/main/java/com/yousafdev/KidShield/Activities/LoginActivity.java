@@ -41,17 +41,11 @@ public class LoginActivity extends AppCompatActivity {
         editTextEmail = findViewById(R.id.editText_email);
         editTextPassword = findViewById(R.id.editText_password);
         buttonLogin = findViewById(R.id.button_login);
-        textViewRegisterPrompt = findViewById(R.id.textView_register_prompt);
-        progressBar = findViewById(R.id.progressBar);
-
-        buttonLogin.setOnClickListener(v -> loginUser());
-        textViewRegisterPrompt.setOnClickListener(v -> {
+        textViewRegisterPrompt = findViewById(R.id.        textViewRegisterPrompt.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
 
-        // 添加"跳过登录"按钮 - 离线Demo模式
-        Button skipBtn = new Button(this);
-        skipBtn.setText("跳过登录 · 离线Demo模式");
+                skipBtn.setText("跳过登录 · 离线Demo模式");
         skipBtn.setTextSize(14);
         skipBtn.setAlpha(0.8f);
         skipBtn.setBackgroundColor(0x33FFFFFF);
@@ -78,11 +72,7 @@ public class LoginActivity extends AppCompatActivity {
                                         androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_PARENT,
                                         androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.WRAP_CONTENT
                                 );
-                        params.topToBottom = R.id.textView_register_prompt;
-                        params.leftToLeft = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID;
-                        params.rightToRight = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID;
-                        params.topMargin = 180;
-                        params.leftMargin = 32;
+                        params.topToBottom = R.id.                        params.leftMargin = 32;
                         params.rightMargin = 32;
                         cl.addView(skipBtn, params);
                     }

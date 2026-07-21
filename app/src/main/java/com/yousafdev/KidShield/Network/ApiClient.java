@@ -75,7 +75,6 @@ public class ApiClient {
     
     // ===================== 孩子绑定家长 =====================
     public JSONObject bindChild(String parentCode) throws Exception {
-    public JSONObject bindChild(String parentCode) throws Exception {
         JSONObject body = new JSONObject();
         body.put("parent_code", parentCode);
         return httpPost("/api/child/bind", body.toString());
