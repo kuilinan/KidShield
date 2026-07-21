@@ -129,19 +129,10 @@ public class ChildSetupActivity extends AppCompatActivity {
         // 完成按钮始终可点，权限可以在设置页面逐步开启
         finishButton.setEnabled(true);
         finishButton.setOnClickListener(v -> {
-            Intent serviceIntent = new Intent(this, MonitoringService.class);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(serviceIntent);
-            } else {
-                startService(serviceIntent);
-            }
-
-            BootReceiver.scheduleDataSync(this);
-
+            // 直接跳转孩子主页，权限可以在设置中逐步开启
             startActivity(new Intent(this, ChildDashboardActivity.class));
             finish();
-        });
-    }
+        }); }
 
     private void checkAllPermissions() {
         if (dpm.isAdminActive(compName)) admin.setGranted();
