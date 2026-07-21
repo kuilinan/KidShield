@@ -1,6 +1,8 @@
 package com.yousafdev.KidShield.Network;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -39,10 +41,14 @@ public class CommandStore {
     
     private final Context context;
     private final File policiesDir;
+    private SharedPreferences prefs;
+    private SharedPreferences.Editor editor;
     
     public CommandStore(Context context) {
         this.context = context;
         this.policiesDir = new File(context.getFilesDir(), POLICIES_DIR);
+        this.prefs = context.getSharedPreferences("kidshield_prefs", Context.MODE_PRIVATE);
+        this.editor = prefs.edit();
         if (!policiesDir.exists()) {
             policiesDir.mkdirs();
             Log.d(TAG, "📁 创建策略目录: " + policiesDir.getAbsolutePath());

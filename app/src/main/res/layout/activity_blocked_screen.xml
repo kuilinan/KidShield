@@ -5,46 +5,57 @@
     android:background="#1A202C">
 
     <LinearLayout
-        android:layout_width="280dp"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:gravity="center"
         android:orientation="vertical"
         android:background="#2D3748"
-        android:padding="28dp"
-        android:radius="16dp"
-        android:elevation="8dp">
+        android:padding="32dp"
+        android:radius="20dp"
+        android:elevation="12dp">
 
         <TextView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:text="⏰"
-            android:textSize="32sp"
+            android:textSize="36sp"
             android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="当前应用已被限制"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textColor="#E2E8F0"
             android:textStyle="bold"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="8dp" />
 
         <TextView
+            android:id="@+id/tv_blocked_app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#FC8181"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_block_reason"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="使用时间已到，休息一下吧"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textColor="#A0AEC0"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginBottom="24dp" />
 
         <Button
             android:id="@+id/button_ok"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:text="知道了"
+            android:layout_height="48dp"
+            android:text="长按返回桌面"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:background="@drawable/btn_blue_rounded" />
@@ -52,11 +63,11 @@
         <Button
             android:id="@+id/button_request_unlock"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_marginTop="8dp"
-            android:text="申请加时"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:text="联系家长申请加时"
             android:textSize="14sp"
-            android:textColor="#4299E1"
+            android:textColor="#63B3ED"
             android:background="@android:color/transparent" />
 
     </LinearLayout>

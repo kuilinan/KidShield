@@ -14,7 +14,6 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.yousafdev.KidShield.Activities.BlockedScreenActivity;
 import com.yousafdev.KidShield.Network.CommandStore;
 
 import java.util.Calendar;
@@ -146,29 +145,74 @@ public class AppAccessibilityService extends AccessibilityService {
     }
 
     /**
-     * 检测是否进入卸载相关页面
+     * 检测是否进入卸载/设置相关页面
+     * 全面支持各大手机厂商（原生/小米/华为/OPPO/vivo/三星等）
      * 只拦截真正的卸载确认弹窗，不拦截"应用信息"和"管理应用"列表
      */
     private boolean isUninstallOrSettingsPage(String packageName, String className) {
-        // 1. 只拦截系统设置的卸载确认对话框（不拦截应用信息页）
+        // ── 方案A: 包名精确匹配 ──
+        // 通用 PackageInstaller
+        if ("com.android.packageinstaller".equals(packageName) ||
+            "com.google.android.packageinstaller".equals(packageName) ||
+            "com.miui.packageinstaller".equals(packageName) ||
+            "com.huawei.packageinstaller".equals(packageName) ||
+            "com.samsung.android.packageinstaller".equals(packageName) ||
+            "com.oplus.packageinstaller".equals(packageName) ||
+            "com.vivo.packageinstaller".equals(packageName)) {
+            // 包安装器中任何包含 Uninstall 的页面都要拦截
+            if (className.contains("Uninstall")) {
+                return true;
+            }
+        }
+        // 通用 Settings
         if ("com.android.settings".equals(packageName)) {
+            // 只拦截包含 Uninstall 的页面，放行 InstalledAppDetails/ApplicationDetail（应用信息页）
             if (className.contains("Uninstall") &&
                 !className.contains("InstalledAppDetails") &&
                 !className.contains("ApplicationDetail")) {
                 return true;
             }
         }
-        // 2. 系统包安装器（卸载确认弹窗）
-        if ("com.android.packageinstaller".equals(packageName) ||
-            "com.google.android.packageinstaller".equals(packageName)) {
+        // 小米安全中心
+        if ("com.miui.securitycenter".equals(packageName)) {
             if (className.contains("Uninstall") ||
-                className.contains("UninstallAlertDialog")) {
+                className.contains("appmanager")) {
                 return true;
             }
         }
-        // 3. 其他厂商包安装器
-        if (packageName.contains("packageinstaller") && className.contains("Uninstall")) {
-            return true;
+        // 华为系统管理器
+        if ("com.huawei.systemmanager".equals(packageName)) {
+            if (className.contains("Uninstall") ||
+                className.contains("AppDetal") ||
+                className.contains("AppDetail")) {
+                return true;
+            }
+        }
+        // OPPO/ColorOS 安全中心
+        if ("com.coloros.safecenter".equals(packageName) ||
+            "com.oppo.safe".equals(packageName)) {
+            if (className.contains("Uninstall") ||
+                className.contains("AppDetail")) {
+                return true;
+            }
+        }
+        // vivo 安全管理
+        if ("com.vivo.secime.service".equals(packageName)) {
+            if (className.contains("Uninstall")) {
+                return true;
+            }
+        }
+        // ── 方案B: 类名关键词匹配（兜底，不依赖包名） ──
+        String[] uninstallPatterns = {
+            "UninstallerActivity",
+            "UninstallAlertDialog",
+            "UninstallConfirmActivity",
+            "UninstallFinishActivity"
+        };
+        for (String pattern : uninstallPatterns) {
+            if (className.contains(pattern)) {
+                return true;
+            }
         }
         return false;
     }
@@ -194,12 +238,11 @@ public class AppAccessibilityService extends AccessibilityService {
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(startMain);
 
-        // 显示封锁提示
-        Intent blockIntent = new Intent(this, BlockedScreenActivity.class);
-        blockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        blockIntent.putExtra("blocked_package", packageName);
-        blockIntent.putExtra("reason", reason);
-        startActivity(blockIntent);
+        // 使用悬浮窗覆盖（可防止Home键绕过）
+        Intent overlayIntent = new Intent(this, BlockOverlayService.class);
+        overlayIntent.putExtra("blockedPackage", packageName);
+        overlayIntent.putExtra("reason", reason);
+        startService(overlayIntent);
     }
 
     @Override
@@ -211,12 +254,14 @@ public class AppAccessibilityService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
+        info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                        | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
-        info.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
+        info.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS
+                   | AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
         info.notificationTimeout = 100;
         setServiceInfo(info);
-        Log.d(TAG, "无障碍服务已连接（白名单+开发者封锁模式）");
+        Log.d(TAG, "无障碍服务已连接（白名单+开发者封锁模式 + 内容变化监听）");
     }
 
     private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {

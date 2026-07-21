@@ -7,7 +7,7 @@
     android:focusable="true">
 
     <LinearLayout
-        android:layout_width="300dp"
+        android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:gravity="center"
@@ -35,7 +35,20 @@
             android:textStyle="bold"
             android:layout_marginBottom="4dp" />
 
+        <!-- 被限制的应用名称 -->
         <TextView
+            android:id="@+id/tv_blocked_app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#E53E3E"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp" />
+
+        <!-- 限制原因 -->
+        <TextView
+            android:id="@+id/tv_block_reason"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="该操作已被家长限制"
@@ -47,7 +60,7 @@
             android:id="@+id/btn_overlay_ok"
             android:layout_width="match_parent"
             android:layout_height="46dp"
-            android:text="我知道了"
+            android:text="长按关闭"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:background="@drawable/btn_blue_rounded"
