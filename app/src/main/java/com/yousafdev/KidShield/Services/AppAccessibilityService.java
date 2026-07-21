@@ -102,12 +102,29 @@ public class AppAccessibilityService extends AccessibilityService {
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             if (event.getPackageName() != null && event.getClassName() != null) {
                 String packageName = event.getPackageName().toString();
-                Log.d(TAG, "前台应用: " + packageName);
+                String className = event.getClassName().toString();
+                Log.d(TAG, "前台应用: " + packageName + " 类: " + className);
 
                 // 发送广播
                 Intent intent = new Intent(ACTION_FOREGROUND_APP);
                 intent.putExtra(EXTRA_PACKAGE_NAME, packageName);
                 sendBroadcast(intent);
+
+                // ===== 防卸载拦截：检测卸载/设置页面 =====
+                if (isUninstallOrSettingsPage(packageName, className)) {
+                    // 检测到卸载相关界面，自动按返回键
+                    Log.w(TAG, "检测到卸载/设置页面，自动返回: " + packageName + "/" + className);
+                    performGlobalAction(GLOBAL_ACTION_BACK);
+
+                    // 同时启动悬浮窗覆盖
+                    try {
+                        Intent overlayIntent = new Intent(this, BlockOverlayService.class);
+                        startService(overlayIntent);
+                    } catch (Exception e) {
+                        Log.e(TAG, "启动悬浮窗失败", e);
+                    }
+                    return;
+                }
 
                 // 开发者模式封锁检查
                 if (devModeBlocked) {
@@ -126,6 +143,39 @@ public class AppAccessibilityService extends AccessibilityService {
                 }
             }
         }
+    }
+
+    /**
+     * 检测是否进入卸载/设置相关页面
+     * 包括：系统设置卸载界面、PackageInstaller卸载确认界面
+     */
+    private boolean isUninstallOrSettingsPage(String packageName, String className) {
+        // 1. 系统设置里的应用详情页（卸载入口）
+        if ("com.android.settings".equals(packageName)) {
+            if (className.contains("InstalledAppDetails") ||
+                className.contains("ApplicationDetail") ||
+                className.contains("ManageApplications") ||
+                className.contains("Uninstall") ||
+                className.contains("AlertDialog")) {
+                return true;
+            }
+        }
+        // 2. 系统包安装器（卸载确认弹窗）
+        if ("com.android.packageinstaller".equals(packageName) ||
+            "com.google.android.packageinstaller".equals(packageName)) {
+            if (className.contains("Uninstall") ||
+                className.contains("AlertDialog") ||
+                className.contains("PackageInstallerActivity")) {
+                return true;
+            }
+        }
+        // 3. 三星/小米/OPPO等厂商包安装器
+        if (packageName.contains("packageinstaller") || packageName.contains("permissioncontroller")) {
+            if (className.contains("Uninstall") || className.contains("AlertDialog")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isDeveloperSettingsPackage(String packageName) {

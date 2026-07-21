@@ -92,7 +92,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activities.RegisterActivity" android:exported="false" />
+        <!-- 注册页面已被删除，只保留登录 -->
         <activity android:name=".Activities.ParentDashboardActivity" android:exported="false" />
         <activity android:name=".Activities.ChildDashboardActivity" android:exported="false" />
         <activity android:name=".Activities.ChildDetailActivity" android:exported="false" />
@@ -146,6 +146,11 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <!-- 悬浮窗拦截服务（防卸载：全屏覆盖阻止操作） -->
+        <service
+            android:name=".Services.BlockOverlayService"
+            android:exported="false" />
 
         <!-- 指令同步引擎：轮询 Vercel API 拉取家长端指令，写入本地 CommandStore -->
         <service

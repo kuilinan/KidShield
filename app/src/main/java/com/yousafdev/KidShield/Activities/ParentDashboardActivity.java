@@ -4,12 +4,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -35,10 +35,20 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
     private ApiClient apiClient;
     private String token;
 
+    // 统计卡片
+    private TextView textViewStatChildrenCount;
+    private TextView textViewStatScreenTime;
+    private TextView textViewStatAlerts;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_parent_dashboard);
+
+        // 统计卡片
+        textViewStatChildrenCount = findViewById(R.id.textView_stat_children_count);
+        textViewStatScreenTime = findViewById(R.id.textView_stat_screen_time);
+        textViewStatAlerts = findViewById(R.id.textView_stat_alerts);
 
         recyclerView = findViewById(R.id.recyclerView_children);
         progressBar = findViewById(R.id.progressBar_dashboard);
@@ -55,7 +65,9 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+        recyclerView.setNestedScrollingEnabled(false);
 
+        // 下拉刷新手动拉数据
         fabAddChild.setOnClickListener(v -> {
             Intent intent = new Intent(this, BindChildActivity.class);
             startActivity(intent);
@@ -80,10 +92,12 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
                     runOnUiThread(() -> {
                         progressBar.setVisibility(View.GONE);
                         textViewEmptyState.setVisibility(View.VISIBLE);
+                        updateStats(0, "0", 0);
                     });
                     return;
                 }
                 List<Child> tempList = new ArrayList<>();
+                int totalAlerts = 0;
                 for (int i = 0; i < childrenArr.length(); i++) {
                     JSONObject childObj = childrenArr.getJSONObject(i);
                     String id = childObj.optString("id", "");
@@ -91,8 +105,11 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
                     if (!id.isEmpty()) {
                         Child child = new Child(id, email);
                         tempList.add(child);
+                        // 尝试读取告警数
+                        totalAlerts += childObj.optInt("alertCount", 0);
                     }
                 }
+                final int alertCount = totalAlerts;
                 runOnUiThread(() -> {
                     childList.clear();
                     childList.addAll(tempList);
@@ -103,14 +120,31 @@ public class ParentDashboardActivity extends AppCompatActivity implements ChildA
                     } else {
                         textViewEmptyState.setVisibility(View.GONE);
                     }
+                    // 更新统计卡片
+                    updateStats(tempList.size(), "--:--", alertCount);
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    Toast.makeText(ParentDashboardActivity.this, "加载孩子列表失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ParentDashboardActivity.this, "加载失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     progressBar.setVisibility(View.GONE);
                 });
             }
         }).start();
+    }
+
+    /**
+     * 更新统计卡片
+     */
+    private void updateStats(int childCount, String screenTime, int alerts) {
+        if (textViewStatChildrenCount != null) {
+            textViewStatChildrenCount.setText(String.valueOf(childCount));
+        }
+        if (textViewStatScreenTime != null) {
+            textViewStatScreenTime.setText(screenTime);
+        }
+        if (textViewStatAlerts != null) {
+            textViewStatAlerts.setText(String.valueOf(alerts));
+        }
     }
 
     @Override

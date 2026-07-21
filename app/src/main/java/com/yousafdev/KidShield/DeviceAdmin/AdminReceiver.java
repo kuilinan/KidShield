@@ -2,10 +2,17 @@ package com.yousafdev.KidShield.DeviceAdmin;
 
 import android.app.admin.DeviceAdminReceiver;
 import android.app.admin.DevicePolicyManager;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.yousafdev.KidShield.R;
@@ -54,8 +61,60 @@ public class AdminReceiver extends DeviceAdminReceiver {
 
     @Override
     public CharSequence onDisableRequested(Context context, Intent intent) {
-        // 返回提示信息，用户点击"停用"时会显示
-        return "停用设备管理员后将无法保护孩子安全，确定要停用吗？";
+        // 读取已设置的卸载密码
+        SharedPreferences prefs = context.getSharedPreferences("kidshield", Context.MODE_PRIVATE);
+        String unlockPassword = prefs.getString("unlock_password", "");
+
+        if (TextUtils.isEmpty(unlockPassword)) {
+            // 家长未设置密码 → 直接提示联系家长
+            return "如需卸载请联系家长";
+        }
+
+        // 家长已设置密码 → 弹出密码输入对话框
+        showPasswordDialog(context, unlockPassword);
+        return ""; // 返回空让系统默认行为，但弹窗会拦截点击
+    }
+
+    /**
+     * 显示密码输入弹窗，输入正确才能继续卸载流程
+     */
+    private void showPasswordDialog(Context context, String correctPassword) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("验证家长密码");
+            builder.setMessage("请输入家长设置的卸载密码");
+
+            // 密码输入框
+            final EditText input = new EditText(context);
+            input.setHint("请输入密码");
+            input.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                    | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.setMargins(40, 10, 40, 10);
+            input.setLayoutParams(lp);
+
+            builder.setView(input);
+            builder.setPositiveButton("确定", null);
+            builder.setNegativeButton("取消", (dialog, which) -> dialog.dismiss());
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+            // 重写确定按钮点击事件
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String entered = input.getText().toString();
+                if (correctPassword.equals(entered)) {
+                    dialog.dismiss();
+                    // 密码正确，允许继续
+                    Toast.makeText(context, "密码正确，继续卸载流程", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(context, "密码错误，请重新输入", Toast.LENGTH_SHORT).show();
+                    input.setText("");
+                }
+            });
+        });
     }
 
     /**

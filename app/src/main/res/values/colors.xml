@@ -3,4 +3,10 @@
     <color name="kidshield_background_dark">#1A202C</color> <color name="kidshield_surface_dark">#2D3748</color>  <color name="kidshield_blue_primary">#4299E1</color>
     <color name="kidshield_yellow">#F6AD55</color>  <color name="kidshield_text_primary">#E2E8F0</color>   <color name="kidshield_text_secondary">#A0AEC0</color> <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- ParentDashboard 统计卡片颜色 -->
+    <color name="kidshield_card_blue">#4299E1</color>
+    <color name="kidshield_card_green">#48BB78</color>
+    <color name="kidshield_card_orange">#ED8936</color>
+    <color name="kidshield_card_red">#F56565</color>
+    <color name="kidshield_card_purple">#9F7AEA</color>
 </resources>
