@@ -301,6 +301,29 @@ public class ActivityBlockerManager {
     /**
      * 获取所有黑名单 URL
      */
+    /**
+     * 获取浏览器拦截原因的文案
+     */
+    public String getUrlBlockReason(String packageName) {
+        if (TextUtils.isEmpty(packageName)) return null;
+        // 检查是否为浏览器应用
+        String[] browserPackages = {
+            "com.android.chrome", "com.android.browser", "com.miui.browser",
+            "com.huawei.browser", "com.heytap.browser", "com.vivo.browser",
+            "com.tencent.mtt", "com.UCMobile", "com.baidu.browser",
+            "com.samsung.android.browser", "org.mozilla.firefox",
+            "org.mozilla.firefox_beta", "com.microsoft.emmx",
+            "com.duckduckgo.mobile.android", "com.opera.browser",
+            "com.opera.mini.android"
+        };
+        for (String bp : browserPackages) {
+            if (bp.equals(packageName)) {
+                return "该浏览器访问的网页已被家长禁止";
+            }
+        }
+        return "此网页已被家长禁止访问";
+    }
+
     public List<String> getBlockedUrls() {
         List<String> list = new ArrayList<>();
         try {
