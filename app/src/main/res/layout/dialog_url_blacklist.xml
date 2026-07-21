@@ -35,7 +35,7 @@
             android:layout_weight="1"
             android:hint="输入网址，如 tiktok.com"
             android:inputType="textUri"
-            android:background="@android:drawable/editbox_background"
+            android:background="@android:drawable/edit_text"
             android:padding="8dp"
             android:textSize="14sp" />
 
