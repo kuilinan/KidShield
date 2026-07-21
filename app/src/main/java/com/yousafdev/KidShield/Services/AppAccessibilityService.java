@@ -15,6 +15,9 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.yousafdev.KidShield.Network.CommandStore;
+import com.yousafdev.KidShield.Utils.LearningModeManager;
+import com.yousafdev.KidShield.Utils.ActivityRecordManager;
+import com.yousafdev.KidShield.Utils.ActivityBlockerManager;
 
 import java.util.Calendar;
 import java.util.HashSet;
@@ -27,6 +30,9 @@ public class AppAccessibilityService extends AccessibilityService {
     public static final String EXTRA_PACKAGE_NAME = "packageName";
 
     private CommandStore commandStore;
+    private LearningModeManager learningModeManager;
+    private ActivityRecordManager activityRecordManager;
+    private ActivityBlockerManager activityBlockerManager;
     private String currentChildUid;
     private Set<String> whitelistApps = new HashSet<>();
     private Set<String> systemApps = new HashSet<>();
@@ -39,7 +45,10 @@ public class AppAccessibilityService extends AccessibilityService {
     public void onCreate() {
         super.onCreate();
         commandStore = new CommandStore(this);
-        Log.d(TAG, "AppAccessibilityService 创建，使用本地 CommandStore");
+        learningModeManager = new LearningModeManager(this);
+        activityRecordManager = new ActivityRecordManager(this);
+        activityBlockerManager = new ActivityBlockerManager(this);
+        Log.d(TAG, "AppAccessibilityService 创建，使用本地 CommandStore + 学习模式/Activity拦截/URL黑名单");
 
         // 加载系统应用列表
         loadSystemApps();
@@ -134,10 +143,33 @@ public class AppAccessibilityService extends AccessibilityService {
                     }
                 }
 
+                // ===== 学习模式采集 =====
+                if (learningModeManager.isLearningMode()) {
+                    activityRecordManager.recordActivity(packageName, className);
+                }
+
+                // ===== Activity 级细粒度拦截 =====
+                if (activityBlockerManager.shouldBlockActivity(packageName, className)) {
+                    String reason = activityBlockerManager.getBlockReason(packageName, className);
+                    blockApp(packageName, reason);
+                    activityRecordManager.markBlocked(packageName, className);
+                    return;
+                }
+
                 // 白名单检查
                 if (whitelistMode) {
                     if (!systemApps.contains(packageName) && !whitelistApps.contains(packageName)) {
                         blockApp(packageName, "此应用已被家长限制");
+                    }
+                }
+
+                // ===== URL 黑名单检测（浏览器浏览拦截入口） =====
+                if (activityBlockerManager.isBrowserUrlBlocked(packageName, className)) {
+                    // 检测到浏览器访问黑名单中的网页，使用回桌面 + 悬浮窗提示
+                    String blockReason = activityBlockerManager.getUrlBlockReason(packageName);
+                    if (blockReason != null) {
+                        Log.w(TAG, "浏览器访问黑名单网页: " + packageName + " - " + blockReason);
+                        blockApp(packageName, blockReason);
                     }
                 }
             }
