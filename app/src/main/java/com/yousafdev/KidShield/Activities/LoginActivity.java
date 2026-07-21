@@ -8,11 +8,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.app.AlertDialog;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,7 +23,6 @@ public class LoginActivity extends AppCompatActivity {
 
     private TextInputEditText editTextEmail, editTextPassword;
     private Button buttonLogin;
-    private TextView textViewRegisterPrompt;
     private ProgressBar progressBar;
     private SharedPreferences prefs;
 
@@ -41,46 +36,9 @@ public class LoginActivity extends AppCompatActivity {
         editTextEmail = findViewById(R.id.editText_email);
         editTextPassword = findViewById(R.id.editText_password);
         buttonLogin = findViewById(R.id.button_login);
-        textViewRegisterPrompt = findViewById(R.id.        textViewRegisterPrompt.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-        });
+        progressBar = findViewById(R.id.progressBar);
 
-                skipBtn.setText("跳过登录 · 离线Demo模式");
-        skipBtn.setTextSize(14);
-        skipBtn.setAlpha(0.8f);
-        skipBtn.setBackgroundColor(0x33FFFFFF);
-        skipBtn.setTextColor(0xFFB0BEC5);
-        skipBtn.setOnClickListener(v -> {
-            progressBar.setVisibility(View.VISIBLE);
-            Intent intent = new Intent(LoginActivity.this, ChildDashboardActivity.class);
-            intent.putExtra("OFFLINE_MODE", true);
-            startActivity(intent);
-            finish();
-        });
-
-        // 把按钮加到底部
-        runOnUiThread(() -> {
-            try {
-                android.widget.LinearLayout root = findViewById(android.R.id.content);
-                if (root != null && root.getChildCount() > 0 && root.getChildAt(0) instanceof android.widget.ScrollView) {
-                    android.widget.ScrollView sv = (android.widget.ScrollView) root.getChildAt(0);
-                    if (sv.getChildCount() > 0 && sv.getChildAt(0) instanceof androidx.constraintlayout.widget.ConstraintLayout) {
-                        androidx.constraintlayout.widget.ConstraintLayout cl = (androidx.constraintlayout.widget.ConstraintLayout) sv.getChildAt(0);
-                        skipBtn.setId(android.view.View.generateViewId());
-                        androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
-                                new androidx.constraintlayout.widget.ConstraintLayout.LayoutParams(
-                                        androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_PARENT,
-                                        androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.WRAP_CONTENT
-                                );
-                        params.topToBottom = R.id.                        params.leftMargin = 32;
-                        params.rightMargin = 32;
-                        cl.addView(skipBtn, params);
-                    }
-                }
-            } catch (Exception e) {
-                // 忽略
-            }
-        });
+        buttonLogin.setOnClickListener(v -> loginUser());
     }
 
     @Override
