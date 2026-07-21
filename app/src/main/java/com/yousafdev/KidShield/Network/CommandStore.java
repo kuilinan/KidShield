@@ -99,9 +99,9 @@ public class CommandStore {
     }
     
     /**
-     * 检查某个应用是否被锁定
+     * 检查某个应用是否在黑名单中（旧方法，用于兼容）
      */
-    public boolean isAppBlocked(String packageName) {
+    public boolean isInBlockedList(String packageName) {
         return getBlockedApps().contains(packageName);
     }
     
