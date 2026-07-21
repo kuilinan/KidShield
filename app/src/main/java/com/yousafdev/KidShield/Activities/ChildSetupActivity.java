@@ -132,7 +132,8 @@ public class ChildSetupActivity extends AppCompatActivity {
             // 直接跳转孩子主页，权限可以在设置中逐步开启
             startActivity(new Intent(this, ChildDashboardActivity.class));
             finish();
-        }); }
+        });
+    }
 
     private void checkAllPermissions() {
         if (dpm.isAdminActive(compName)) admin.setGranted();
