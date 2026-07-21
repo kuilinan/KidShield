@@ -126,8 +126,8 @@ public class ChildSetupActivity extends AppCompatActivity {
         battery.enableButton.setOnClickListener(v -> requestIgnoreBatteryOptimizations());
         accessibility.enableButton.setOnClickListener(v -> requestAccessibilityService());
 
-        // 完成按钮始终可点，权限可以在设置页面逐步开启
-        finishButton.setEnabled(true);
+        // 完成按钮默认灰色，全部授权完成才能点击
+        finishButton.setEnabled(false);
         finishButton.setOnClickListener(v -> {
             // 直接跳转孩子主页，权限可以在设置中逐步开启
             startActivity(new Intent(this, ChildDashboardActivity.class));

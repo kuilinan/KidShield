@@ -65,7 +65,16 @@ public class ApiClient {
         return httpGet("/api/user/me");
     }
     
+    // ===================== 家长绑定孩子 =====================
+    public JSONObject parentBindChild(String childEmail, String parentCode) throws Exception {
+        JSONObject body = new JSONObject();
+        body.put("child_email", childEmail);
+        body.put("parent_code", parentCode);
+        return httpPost("/api/parent/bind", body.toString());
+    }
+    
     // ===================== 孩子绑定家长 =====================
+    public JSONObject bindChild(String parentCode) throws Exception {
     public JSONObject bindChild(String parentCode) throws Exception {
         JSONObject body = new JSONObject();
         body.put("parent_code", parentCode);
