@@ -1,7 +1,7 @@
 package com.yousafdev.KidShield.Utils;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import com.yousafdev.KidShield.Network.CommandStore;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -21,14 +21,11 @@ import java.util.List;
  */
 public class ActivityBlockerManager {
     private static final String TAG = "ActivityBlockerManager";
-    private static final String PREFS_NAME = "blocked_activities";
-    private static final String KEY_ACTIVITY_RULES = "activity_rules";
-    private static final String KEY_URL_BLACKLIST = "url_blacklist";
 
-    private final SharedPreferences prefs;
+    private final CommandStore commandStore;
 
     public ActivityBlockerManager(Context context) {
-        this.prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.commandStore = new CommandStore(context);
     }
 
     // ==================== Activity 级拦截规则 ====================
@@ -272,7 +269,7 @@ public class ActivityBlockerManager {
                 }
             }
             urls.put(url.trim());
-            prefs.edit().putString(KEY_URL_BLACKLIST, urls.toString()).apply();
+            commandStore.saveUrlBlacklist(urls);
             Log.d(TAG, "URL已加入黑名单: " + url);
         } catch (Exception e) {
             Log.e(TAG, "添加URL黑名单失败", e);
@@ -291,7 +288,7 @@ public class ActivityBlockerManager {
                     newUrls.put(urls.getString(i));
                 }
             }
-            prefs.edit().putString(KEY_URL_BLACKLIST, newUrls.toString()).apply();
+            commandStore.saveUrlBlacklist(newUrls);
             Log.d(TAG, "URL已从黑名单移除: " + url);
         } catch (Exception e) {
             Log.e(TAG, "移除URL黑名单失败", e);
@@ -341,21 +338,19 @@ public class ActivityBlockerManager {
 
     private JSONArray getActivityRules() {
         try {
-            String json = prefs.getString(KEY_ACTIVITY_RULES, "[]");
-            return new JSONArray(json);
+        return commandStore.getActivityRules();
         } catch (Exception e) {
             return new JSONArray();
         }
     }
 
     private void saveActivityRules(JSONArray rules) {
-        prefs.edit().putString(KEY_ACTIVITY_RULES, rules.toString()).apply();
+        commandStore.saveActivityRules(rules);
     }
 
     private JSONArray getUrlBlacklist() {
         try {
-            String json = prefs.getString(KEY_URL_BLACKLIST, "[]");
-            return new JSONArray(json);
+        return commandStore.getActivityRules();
         } catch (Exception e) {
             return new JSONArray();
         }

@@ -33,6 +33,9 @@ import java.util.Map;
  *   ├── missions.json          ← 任务列表
  *   ├── lockdown.json          ← 锁定模式(全局锁)
  *   ├── time_requests.json     ← 加时长申请(缓存)
+ *   ├── url_blacklist.json      ← URL黑名单(清除数据不丢)
+ *   ├── activity_rules.json     ← Activity级拦截规则(清除数据不丢)
+ *   ├── block_rules.json        ← 禁令规则(定时解禁，清除数据不丢)
  *   └── policy_version.json    ← 版本号(用于增量更新)
  */
 public class CommandStore {
@@ -63,6 +66,9 @@ public class CommandStore {
     private File getLockdownFile() { return new File(policiesDir, "lockdown.json"); }
     private File getTimeRequestsFile() { return new File(policiesDir, "time_requests.json"); }
     private File getPolicyVersionFile() { return new File(policiesDir, "policy_version.json"); }
+    private File getUrlBlacklistFile() { return new File(policiesDir, "url_blacklist.json"); }
+    private File getActivityRulesFile() { return new File(policiesDir, "activity_rules.json"); }
+    private File getBlockRulesFile() { return new File(policiesDir, "block_rules.json"); }
     
     // ========== 1. 被锁定的应用（黑名单） ==========
     
@@ -389,6 +395,52 @@ public class CommandStore {
         Log.d(TAG, "🗑 已清除所有本地策略");
     }
     
+    // ========== 8. URL黑名单（清除数据不丢，重启有效） ==========
+    
+    public void saveUrlBlacklist(JSONArray urls) {
+        try {
+            writeFile(getUrlBlacklistFile(), urls.toString(2));
+            Log.d(TAG, "🌐 已保存 " + urls.length() + " 个URL黑名单");
+        } catch (Exception e) {
+            Log.e(TAG, "保存URL黑名单失败", e);
+        }
+    }
+    
+    public JSONArray getUrlBlacklist() {
+        try {
+            String content = readFile(getUrlBlacklistFile());
+            if (content != null) {
+                return new JSONArray(content);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "读取URL黑名单失败", e);
+        }
+        return new JSONArray();
+    }
+    
+    // ========== 9. Activity拦截规则（清除数据不丢，重启有效） ==========
+    
+    public void saveActivityRules(JSONArray rules) {
+        try {
+            writeFile(getActivityRulesFile(), rules.toString(2));
+            Log.d(TAG, "📋 已保存 " + rules.length() + " 条Activity拦截规则");
+        } catch (Exception e) {
+            Log.e(TAG, "保存Activity拦截规则失败", e);
+        }
+    }
+    
+    public JSONArray getActivityRules() {
+        try {
+            String content = readFile(getActivityRulesFile());
+            if (content != null) {
+                return new JSONArray(content);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "读取Activity拦截规则失败", e);
+        }
+        return new JSONArray();
+    }
+    
     // ===================== 文件 I/O =====================
     
     private void writeFile(File file, String content) throws Exception {
@@ -422,7 +474,6 @@ public class CommandStore {
      */
     public void saveBlockRule(String packageName, int durationMinutes, String reason) {
         try {
-            editor = prefs.edit();
             JSONObject rule = new JSONObject();
             rule.put("packageName", packageName);
             rule.put("durationMinutes", durationMinutes);
@@ -445,8 +496,7 @@ public class CommandStore {
             if (!updated) {
                 rules.put(rule);
             }
-            editor.putString("block_rules", rules.toString());
-            editor.apply();
+                        writeFile(getBlockRulesFile(), rules.toString(2));
 
             // 发送广播通知无障碍服务更新
             Intent intent = new Intent("com.yousafdev.KidShield.UPDATE_WHITELIST");
@@ -463,11 +513,14 @@ public class CommandStore {
      */
     public JSONArray getBlockRules() {
         try {
-            String json = prefs.getString("block_rules", "[]");
-            return new JSONArray(json);
+            String content = readFile(getBlockRulesFile());
+            if (content != null) {
+                return new JSONArray(content);
+            }
         } catch (Exception e) {
-            return new JSONArray();
+            Log.e(TAG, "读取禁令规则失败", e);
         }
+        return new JSONArray();
     }
 
     /**
@@ -489,9 +542,7 @@ public class CommandStore {
                     } else {
                         // 已过期，自动移除
                         rules.remove(i);
-                        editor = prefs.edit();
-                        editor.putString("block_rules", rules.toString());
-                        editor.apply();
+                        writeFile(getBlockRulesFile(), rules.toString(2));
                         return false;
                     }
                 }
@@ -516,9 +567,7 @@ public class CommandStore {
                     newRules.put(rule);
                 }
             }
-            editor = prefs.edit();
-            editor.putString("block_rules", newRules.toString());
-            editor.apply();
+            writeFile(getBlockRulesFile(), newRules.toString(2));
 
             Intent intent = new Intent("com.yousafdev.KidShield.UPDATE_WHITELIST");
             context.sendBroadcast(intent);
