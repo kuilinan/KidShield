@@ -126,15 +126,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void navigateByRole(String role) {
-        Intent intent;
-        if ("child".equals(role)) {
-            intent = new Intent(LoginActivity.this, ChildSetupActivity.class);
-        } else if ("parent".equals(role)) {
-            intent = new Intent(LoginActivity.this, ParentDashboardActivity.class);
-        } else {
-            Toast.makeText(LoginActivity.this, "未知的用户角色", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        // 先设置安全检查的目标角色
+        PermissionGuardActivity.setTargetRole(this, role);
+        Intent intent = new Intent(LoginActivity.this, PermissionGuardActivity.class);
         startActivity(intent);
         finish();
     }

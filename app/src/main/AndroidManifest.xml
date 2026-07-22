@@ -94,6 +94,7 @@
         </activity>
         <!-- 注册页面已被删除，只保留登录 -->
         <activity android:name=".Activities.LearningModeActivity" android:exported="false" />
+        <activity android:name=".Activities.PermissionGuardActivity" android:exported="false" />
         <activity android:name=".Activities.ParentDashboardActivity" android:exported="false" />
         <activity android:name=".Activities.ChildDashboardActivity" android:exported="false" />
         <activity android:name=".Activities.ChildDetailActivity" android:exported="false" />
