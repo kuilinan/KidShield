@@ -15,14 +15,11 @@ jobs:
           distribution: 'temurin'
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Install system deps for AAPT2
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libgcc-s1 libstdc++6 2>/dev/null || true
-      - name: Clean and Build APK
+      - name: Clear Gradle cache and build
         run: |
           chmod +x ./gradlew
-          ./gradlew clean assembleDebug --no-daemon
+          rm -rf ~/.gradle/caches/transforms-*
+          ./gradlew assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
