@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
@@ -98,7 +99,7 @@ public class PermissionGuardActivity extends AppCompatActivity {
      * 标记需要跳转的目标角色
      */
     public static void setTargetRole(Context context, String role) {
-        context.getSharedPreferences(PREF_NAME, MODE_PRIVATE)
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_TARGET_ROLE, role)
             .apply();
@@ -188,7 +189,7 @@ public class PermissionGuardActivity extends AppCompatActivity {
     }
 
     private void proceedToTarget() {
-        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         String targetRole = prefs.getString(KEY_TARGET_ROLE, "parent");
 
         Intent intent;
