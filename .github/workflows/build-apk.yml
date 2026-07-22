@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -15,11 +15,15 @@ jobs:
           distribution: 'temurin'
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Clear Gradle cache and build
+      - name: Fix AAPT2 - install 32bit libs
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libc6:i386 libncurses5:i386 libstdc++6:i386 libz1:i386 2>/dev/null || true
+      - name: Build APK
         run: |
           chmod +x ./gradlew
-          rm -rf ~/.gradle/caches/transforms-*
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
