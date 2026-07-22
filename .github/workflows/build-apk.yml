@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -15,11 +15,17 @@ jobs:
           distribution: 'temurin'
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Install 32-bit libs for AAPT2
+      - name: Replace AAPT2 with stable version
         run: |
-          sudo dpkg --add-architecture i386
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libc6:i386 libstdc++6:i386 libz1:i386
+          BUILD_TOOLS=$ANDROID_HOME/build-tools/35.0.0
+          echo "Before:"
+          $BUILD_TOOLS/aapt2 version 2>&1 || true
+          curl -sLo /tmp/aapt2.jar "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/8.3.0-10154469/aapt2-8.3.0-10154469-linux.jar"
+          cd /tmp && unzip -o aapt2.jar aapt2 -d aapt2_extract 2>/dev/null
+          sudo cp /tmp/aapt2_extract/aapt2 $BUILD_TOOLS/aapt2
+          sudo chmod +x $BUILD_TOOLS/aapt2
+          echo "After:"
+          $BUILD_TOOLS/aapt2 version
       - name: Build APK
         run: |
           chmod +x ./gradlew
