@@ -107,7 +107,9 @@ public class AppAccessibilityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+        int eventType = event.getEventType();
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+            eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             if (event.getPackageName() != null && event.getClassName() != null) {
                 String packageName = event.getPackageName().toString();
                 String className = event.getClassName().toString();
@@ -127,6 +129,7 @@ public class AppAccessibilityService extends AccessibilityService {
                     // 同时启动悬浮窗覆盖
                     try {
                         Intent overlayIntent = new Intent(this, BlockOverlayService.class);
+                        overlayIntent.putExtra("blockedPackage", packageName);
                         startService(overlayIntent);
                     } catch (Exception e) {
                         Log.e(TAG, "启动悬浮窗失败", e);
