@@ -18,6 +18,14 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.SET_ALARM" />
+    <!-- ========== VIVO 保活专用权限 ========== -->
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <uses-permission android:name="android.permission.DUMP" tools:ignore="ProtectedPermissions" />
     
     <!-- ========== 开机自启 & 解锁自启（阳光守护特性） ========== -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -196,6 +204,11 @@
             android:exported="false" />
 
         <!-- 电源状态监听（阳光守护保活特性：充电时唤醒） -->
+        <!-- Alarm 自愈接收器（VIVO 强保活：被杀死后通过闹钟重拉） -->
+        <receiver
+            android:name=".Services.GuardService$AlarmSelfHealReceiver"
+            android:enabled="true"
+            android:exported="false" />
         <receiver
             android:name=".Utils.PowerConnectionReceiver"
             android:enabled="true"

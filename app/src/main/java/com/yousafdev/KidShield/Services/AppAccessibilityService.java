@@ -2,16 +2,19 @@ package com.yousafdev.KidShield.Services;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.accessibilityservice.GestureDescription;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
+import android.graphics.Path;
+import android.os.Build;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityEvent;
 import android.util.Log;
-
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.yousafdev.KidShield.Network.CommandStore;
@@ -29,6 +32,9 @@ public class AppAccessibilityService extends AccessibilityService {
     public static final String ACTION_FOREGROUND_APP = "com.yousafdev.KidShield.ACTION_FOREGROUND_APP";
     public static final String EXTRA_PACKAGE_NAME = "packageName";
 
+    // 运行状态标记
+    private static boolean sRunning = false;
+
     private CommandStore commandStore;
     private LearningModeManager learningModeManager;
     private ActivityRecordManager activityRecordManager;
@@ -41,24 +47,29 @@ public class AppAccessibilityService extends AccessibilityService {
     private String lastBlockedPackage = "";
     private long lastBlockedTime = 0;
 
+    // 防抖：上次多任务拦截时间
+    private long lastRecentAppsBlockTime = 0;
+    // USB/ADB 检测
+    private boolean adbWarningShown = false;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        sRunning = true;
         commandStore = new CommandStore(this);
         learningModeManager = new LearningModeManager(this);
         activityRecordManager = new ActivityRecordManager(this);
         activityBlockerManager = new ActivityBlockerManager(this);
         Log.d(TAG, "AppAccessibilityService 创建，使用本地 CommandStore + 学习模式/Activity拦截/URL黑名单");
-
-        // 加载系统应用列表
         loadSystemApps();
-
-        // 读取本地存储的策略
         loadPoliciesFromStore();
-
-        // 注册广播接收器（用于策略更新通知）
         IntentFilter filter = new IntentFilter("com.yousafdev.KidShield.UPDATE_WHITELIST");
         registerReceiver(updateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+    }
+
+    /** 供外部查询服务是否运行 */
+    public static boolean isRunning() {
+        return sRunning;
     }
 
     private void loadSystemApps() {
@@ -73,24 +84,14 @@ public class AppAccessibilityService extends AccessibilityService {
     }
 
     private void loadPoliciesFromStore() {
-        // 从本地 CommandStore 读取当前策略
-        // 白名单模式
         whitelistMode = commandStore.getWhitelistMode();
         Log.d(TAG, "白名单模式: " + whitelistMode);
-
-        // 白名单应用列表
         List<String> storedWhitelist = commandStore.getWhitelistPackageNames();
         whitelistApps.clear();
-        if (storedWhitelist != null) {
-            whitelistApps.addAll(storedWhitelist);
-        }
+        if (storedWhitelist != null) whitelistApps.addAll(storedWhitelist);
         Log.d(TAG, "白名单应用: " + whitelistApps.size() + " 个");
-
-        // 开发者模式封锁
         devModeBlocked = commandStore.isDevModeBlocked();
-        if (devModeBlocked) {
-            enforceDevModeBlock();
-        }
+        if (devModeBlocked) enforceDevModeBlock();
         Log.d(TAG, "开发者模式封锁: " + devModeBlocked);
     }
 
@@ -98,7 +99,9 @@ public class AppAccessibilityService extends AccessibilityService {
         try {
             Settings.Global.putInt(getContentResolver(), "development_settings_enabled", 0);
             Settings.Global.putInt(getContentResolver(), "adb_enabled", 0);
-            Settings.Global.putInt(getContentResolver(), "adb_wifi_enabled", 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                Settings.Global.putInt(getContentResolver(), "adb_wifi_enabled", 0);
+            }
             Log.d(TAG, "开发者模式已强制关闭");
         } catch (Exception e) {
             Log.e(TAG, "关闭开发者模式失败", e);
@@ -108,6 +111,31 @@ public class AppAccessibilityService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         int eventType = event.getEventType();
+
+        // ===== 多任务键拦截（TYPE_WINDOWS_CHANGED 可捕捉多任务界面） =====
+        if (eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED || 
+            eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            
+            // 检测是否进入了多任务/最近任务界面
+            if (event.getPackageName() != null && event.getClassName() != null) {
+                String pkg = event.getPackageName().toString();
+                String cls = event.getClassName().toString();
+
+                // 多任务界面特征
+                if (isRecentAppsScreen(pkg, cls)) {
+                    long now = System.currentTimeMillis();
+                    // 500ms 防抖
+                    if (now - lastRecentAppsBlockTime > 500) {
+                        lastRecentAppsBlockTime = now;
+                        Log.w(TAG, "⛔ 检测到多任务界面，强制返回桌面: " + cls);
+                        // 先返回到桌面
+                        performGlobalAction(GLOBAL_ACTION_HOME);
+                    }
+                    return; // 不再处理其他逻辑
+                }
+            }
+        }
+
         if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
             eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             if (event.getPackageName() != null && event.getClassName() != null) {
@@ -115,21 +143,22 @@ public class AppAccessibilityService extends AccessibilityService {
                 String className = event.getClassName().toString();
                 Log.d(TAG, "前台应用: " + packageName + " 类: " + className);
 
-                // 发送广播
+                // 发送前台广播
                 Intent intent = new Intent(ACTION_FOREGROUND_APP);
                 intent.putExtra(EXTRA_PACKAGE_NAME, packageName);
                 sendBroadcast(intent);
 
-                // ===== 防卸载拦截：检测卸载/设置页面 =====
+                // ===== USB/ADB 连接检测（每次前台切换都检查） =====
+                checkAdbConnection();
+
+                // ===== 防卸载拦截 =====
                 if (isUninstallOrSettingsPage(packageName, className)) {
-                    // 检测到卸载相关界面，自动按返回键
                     Log.w(TAG, "检测到卸载/设置页面，自动返回: " + packageName + "/" + className);
                     performGlobalAction(GLOBAL_ACTION_BACK);
-
-                    // 同时启动悬浮窗覆盖
                     try {
                         Intent overlayIntent = new Intent(this, BlockOverlayService.class);
                         overlayIntent.putExtra("blockedPackage", packageName);
+                        overlayIntent.putExtra("reason", "家长已禁用应用卸载");
                         startService(overlayIntent);
                     } catch (Exception e) {
                         Log.e(TAG, "启动悬浮窗失败", e);
@@ -166,9 +195,8 @@ public class AppAccessibilityService extends AccessibilityService {
                     }
                 }
 
-                // ===== URL 黑名单检测（浏览器浏览拦截入口） =====
+                // ===== URL 黑名单检测 =====
                 if (activityBlockerManager.isBrowserUrlBlocked(packageName, className)) {
-                    // 检测到浏览器访问黑名单中的网页，使用回桌面 + 悬浮窗提示
                     String blockReason = activityBlockerManager.getUrlBlockReason(packageName);
                     if (blockReason != null) {
                         Log.w(TAG, "浏览器访问黑名单网页: " + packageName + " - " + blockReason);
@@ -180,13 +208,61 @@ public class AppAccessibilityService extends AccessibilityService {
     }
 
     /**
+     * 检测是否是多任务/最近任务界面
+     * 覆盖主流厂商 + VIVO OriginOS
+     */
+    private boolean isRecentAppsScreen(String packageName, String className) {
+        // 原生 Android / AOSP
+        if ("com.android.systemui".equals(packageName) && 
+            (className.contains("Recent") || className.contains("Overview"))) {
+            return true;
+        }
+        // VIVO OriginOS（不同版本路径不同）
+        if ("com.android.systemui".equals(packageName) &&
+            (className.contains("RecentTask") || 
+             className.contains("RecentApps") || 
+             className.contains("MultiTask") ||
+             className.contains("RecentsActivity"))) {
+            return true;
+        }
+        // 通用：类名包含 Recent/Overview/MultiTask
+        if (className.contains("RecentApps") || 
+            className.contains("RecentPanel") ||
+            className.contains("Overview") ||
+            className.contains("MultiTasking") ||
+            className.contains("RecentTasks")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 检测 USB/ADB 连接
+     */
+    private void checkAdbConnection() {
+        try {
+            boolean adbEnabled = Settings.Global.getInt(getContentResolver(), "adb_enabled", 0) == 1;
+            if (adbEnabled && devModeBlocked) {
+                // 如果 ADB 开启了但 devModeBlock 没关掉它，说明可能被手动开启
+                enforceDevModeBlock();
+                if (!adbWarningShown) {
+                    adbWarningShown = true;
+                    Log.w(TAG, "⚠ 检测到 ADB 连接！已强制关闭");
+                }
+            } else {
+                adbWarningShown = false;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "ADB检查异常", e);
+        }
+    }
+
+    /**
      * 检测是否进入卸载/设置相关页面
-     * 全面支持各大手机厂商（原生/小米/华为/OPPO/vivo/三星等）
-     * 只拦截真正的卸载确认弹窗，不拦截"应用信息"和"管理应用"列表
+     * 增强：覆盖 VIVO 更多卸载路径
      */
     private boolean isUninstallOrSettingsPage(String packageName, String className) {
         // ── 方案A: 包名精确匹配 ──
-        // 通用 PackageInstaller
         if ("com.android.packageinstaller".equals(packageName) ||
             "com.google.android.packageinstaller".equals(packageName) ||
             "com.miui.packageinstaller".equals(packageName) ||
@@ -194,60 +270,61 @@ public class AppAccessibilityService extends AccessibilityService {
             "com.samsung.android.packageinstaller".equals(packageName) ||
             "com.oplus.packageinstaller".equals(packageName) ||
             "com.vivo.packageinstaller".equals(packageName)) {
-            // 包安装器中任何包含 Uninstall 的页面都要拦截
-            if (className.contains("Uninstall")) {
+            if (className.contains("Uninstall") || className.contains("uninstall")) {
                 return true;
             }
         }
         // 通用 Settings
         if ("com.android.settings".equals(packageName)) {
-            // 只拦截包含 Uninstall 的页面，放行 InstalledAppDetails/ApplicationDetail（应用信息页）
             if (className.contains("Uninstall") &&
                 !className.contains("InstalledAppDetails") &&
                 !className.contains("ApplicationDetail")) {
                 return true;
             }
         }
-        // 小米安全中心
-        if ("com.miui.securitycenter".equals(packageName)) {
-            if (className.contains("Uninstall") ||
-                className.contains("appmanager")) {
+        // VIVO 安全中心（多版本）
+        if ("com.vivo.secime.service".equals(packageName) ||
+            "com.vivo.secime".equals(packageName)) {
+            if (className.contains("Uninstall") || 
+                className.contains("AppUninstall") ||
+                className.contains("ApplicationManage")) {
                 return true;
             }
         }
-        // 华为系统管理器
-        if ("com.huawei.systemmanager".equals(packageName)) {
-            if (className.contains("Uninstall") ||
-                className.contains("AppDetal") ||
-                className.contains("AppDetail")) {
-                return true;
-            }
-        }
-        // OPPO/ColorOS 安全中心
-        if ("com.coloros.safecenter".equals(packageName) ||
-            "com.oppo.safe".equals(packageName)) {
-            if (className.contains("Uninstall") ||
-                className.contains("AppDetail")) {
-                return true;
-            }
-        }
-        // vivo 安全管理
-        if ("com.vivo.secime.service".equals(packageName)) {
+        // VIVO 智能引擎（OriginOS 卸载路径）
+        if ("com.vivo.assistant".equals(packageName) ||
+            "com.vivo.engine".equals(packageName)) {
             if (className.contains("Uninstall")) {
                 return true;
             }
         }
-        // ── 方案B: 类名关键词匹配（兜底，不依赖包名） ──
-        String[] uninstallPatterns = {
-            "UninstallerActivity",
-            "UninstallAlertDialog",
-            "UninstallConfirmActivity",
-            "UninstallFinishActivity"
-        };
-        for (String pattern : uninstallPatterns) {
-            if (className.contains(pattern)) {
+        // VIVO 桌面启动器长按卸载入口
+        if ("com.android.launcher3".equals(packageName) ||
+            "com.vivo.launcher".equals(packageName)) {
+            if (className.contains("Uninstall")) {
                 return true;
             }
+        }
+        // 小米安全中心
+        if ("com.miui.securitycenter".equals(packageName)) {
+            if (className.contains("Uninstall") || className.contains("appmanager")) return true;
+        }
+        // 华为系统管理器
+        if ("com.huawei.systemmanager".equals(packageName)) {
+            if (className.contains("Uninstall") || className.contains("AppDetal") || className.contains("AppDetail")) return true;
+        }
+        // OPPO/ColorOS
+        if ("com.coloros.safecenter".equals(packageName) || "com.oppo.safe".equals(packageName)) {
+            if (className.contains("Uninstall") || className.contains("AppDetail")) return true;
+        }
+        // ── 方案B: 类名关键词匹配 ──
+        String[] uninstallPatterns = {
+            "UninstallerActivity", "UninstallAlertDialog",
+            "UninstallConfirmActivity", "UninstallFinishActivity",
+            "uninstall", "Uninstall"
+        };
+        for (String pattern : uninstallPatterns) {
+            if (className.contains(pattern)) return true;
         }
         return false;
     }
@@ -261,19 +338,17 @@ public class AppAccessibilityService extends AccessibilityService {
 
     private void blockApp(String packageName, String reason) {
         long now = System.currentTimeMillis();
-        if (packageName.equals(lastBlockedPackage) && (now - lastBlockedTime) < 3000) {
-            return;
-        }
+        if (packageName.equals(lastBlockedPackage) && (now - lastBlockedTime) < 3000) return;
         lastBlockedPackage = packageName;
         lastBlockedTime = now;
 
-        // 回到桌面
+        // 返回桌面
         Intent startMain = new Intent(Intent.ACTION_MAIN);
         startMain.addCategory(Intent.CATEGORY_HOME);
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(startMain);
 
-        // 使用悬浮窗覆盖（可防止Home键绕过）
+        // 悬浮窗覆盖
         Intent overlayIntent = new Intent(this, BlockOverlayService.class);
         overlayIntent.putExtra("blockedPackage", packageName);
         overlayIntent.putExtra("reason", reason);
@@ -288,15 +363,26 @@ public class AppAccessibilityService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        sRunning = true;
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
-                        | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
+                        | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+                        | AccessibilityEvent.TYPE_WINDOWS_CHANGED; // 加这个才能捕捉多任务
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
         info.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS
                    | AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
         info.notificationTimeout = 100;
         setServiceInfo(info);
-        Log.d(TAG, "无障碍服务已连接（白名单+开发者封锁模式 + 内容变化监听）");
+        Log.d(TAG, "无障碍服务已连接（含多任务拦截+VIVO卸载路径+TYPE_WINDOWS_CHANGED）");
+    }
+
+    @Override
+    public void onDestroy() {
+        sRunning = false;
+        super.onDestroy();
+        try {
+            unregisterReceiver(updateReceiver);
+        } catch (Exception ignored) {}
     }
 
     private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
@@ -308,14 +394,4 @@ public class AppAccessibilityService extends AccessibilityService {
             }
         }
     };
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        try {
-            unregisterReceiver(updateReceiver);
-        } catch (Exception e) {
-            // ignore
-        }
-    }
 }

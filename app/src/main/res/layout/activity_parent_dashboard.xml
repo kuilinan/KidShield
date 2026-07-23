@@ -138,6 +138,90 @@
                 </androidx.cardview.widget.CardView>
 
             </LinearLayout>
+            <!-- ===== VIVO 保活引导卡片 ===== -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_vivo_keepalive"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#FFF8E1"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                tools:visibility="visible">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚡ VIVO 保活设置"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#E65100" />
+                    <TextView
+                        android:id="@+id/textView_vivo_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="部分保活选项未配置，点击查看详情"
+                        android:textSize="13sp"
+                        android:textColor="#795548" />
+                    <TextView
+                        android:id="@+id/textView_vivo_guide"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:padding="10dp"
+                        android:background="#FFECB3"
+                        android:textSize="12sp"
+                        android:textColor="#5D4037"
+                        android:visibility="gone"
+                        android:lineSpacingExtra="4dp"
+                        tools:visibility="visible" />
+                    <Button
+                        android:id="@+id/btn_vivo_battery_whitelist"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="8dp"
+                        android:text="🔋 加入电池白名单"
+                        android:textSize="13sp"
+                        android:textColor="@android:color/white"
+                        android:background="@drawable/btn_blue_rounded" />
+                    <Button
+                        android:id="@+id/btn_vivo_autostart"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="6dp"
+                        android:text="🚀 开启自启动管理"
+                        android:textSize="13sp"
+                        android:textColor="@android:color/white"
+                        android:background="@drawable/btn_blue_rounded" />
+                    <Button
+                        android:id="@+id/btn_vivo_lock_clean"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="6dp"
+                        android:text="🔒 锁屏清理白名单"
+                        android:textSize="13sp"
+                        android:textColor="@android:color/white"
+                        android:background="@drawable/btn_blue_rounded" />
+                    <Button
+                        android:id="@+id/btn_vivo_highpower"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="6dp"
+                        android:text="🔋 后台高耗电白名单"
+                        android:textSize="13sp"
+                        android:textColor="@android:color/white"
+                        android:background="@drawable/btn_blue_rounded" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            <!-- VIVO 引导卡片结束 -->
 
             <!-- 孩子列表标题 -->
             <TextView
