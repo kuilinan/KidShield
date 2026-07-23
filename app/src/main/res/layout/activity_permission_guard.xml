@@ -220,7 +220,7 @@
             android:background="@drawable/btn_blue_rounded"
             android:textColor="#FFFFFF"
             android:enabled="false"
-            android:alpha="0.6f" />
+            android:alpha="0.6" />
 
         <TextView
             android:layout_width="match_parent"
