@@ -206,7 +206,7 @@
         <!-- 电源状态监听（阳光守护保活特性：充电时唤醒） -->
         <!-- Alarm 自愈接收器（VIVO 强保活：被杀死后通过闹钟重拉） -->
         <receiver
-            android:name=".Services.GuardService$AlarmSelfHealReceiver"
+            android:name=".Receivers.AlarmSelfHealReceiver"
             android:enabled="true"
             android:exported="false" />
         <receiver

@@ -27,7 +27,6 @@ import androidx.core.app.NotificationCompat;
 import com.yousafdev.KidShield.DeviceAdmin.AdminReceiver;
 import com.yousafdev.KidShield.R;
 import com.yousafdev.KidShield.Utils.VivoKeepAliveHelper;
-import com.yousafdev.KidShield.Receivers.AlarmSelfHealReceiver;
 
 /**
  * 升级版综合守护服务（VIVO 强保活引擎）
@@ -229,6 +228,36 @@ public class GuardService extends Service {
                 pendingIntent);
     }
 
+    /**
+     * AlarmReceiver：当 GuardService 被杀死时，通过 Alarm 重新拉起
+     */
+    public static class AlarmSelfHealReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (!AlarmSelfHealReceiver.isServiceRunning(context)) {
+                Log.w(TAG, "⚠ GuardService 已被杀！Alarm 自愈机制重新拉起...");
+                Intent serviceIntent = new Intent(context, GuardService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(serviceIntent);
+                } else {
+                    context.startService(serviceIntent);
+                }
+            }
+        }
+
+        private static boolean isServiceRunning(Context context) {
+            try {
+                // 通过 SharedPreference 标记判断（简单可靠）
+                SharedPreferences prefs = context.getSharedPreferences("guard_health", Context.MODE_PRIVATE);
+                long lastHeartbeat = prefs.getLong("last_heartbeat", 0);
+                return (System.currentTimeMillis() - lastHeartbeat) < 30000; // 30秒内有心跳则视为存活
+            } catch (Exception e) {
+                return false;
+            }
+        }
+    }
+
+    // ==================== 开发者封锁 ====================
 
     private void enforceDevModeBlock() {
         if (!devModeBlocked) return;
