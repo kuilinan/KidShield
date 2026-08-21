@@ -21,7 +21,7 @@ public class ApiClient {
     private static final String TAG = "ApiClient";
     
     // ⭐ 这里改成你的 Vercel 生产域名！
-    private static final String BASE_URL = "https://kidshield.zeabur.app";
+    private static final String BASE_URL = "https://www-api.h33024a21.nyat.app:36706";
     
     private static ApiClient instance;
     private String authToken;
