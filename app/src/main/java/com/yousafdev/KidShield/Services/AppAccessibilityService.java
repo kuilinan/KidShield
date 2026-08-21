@@ -276,9 +276,27 @@ public class AppAccessibilityService extends AccessibilityService {
         }
         // 通用 Settings
         if ("com.android.settings".equals(packageName)) {
+            // 卸载确认页
             if (className.contains("Uninstall") &&
                 !className.contains("InstalledAppDetails") &&
                 !className.contains("ApplicationDetail")) {
+                return true;
+            }
+            // 【防小人-关键】设备管理应用页：防止孩子取消设备管理员激活！
+            // 类名通常为 DeviceAdminPicker / DeviceAdminAdd / DeviceAdminSettings
+            if (className.contains("DeviceAdmin") || className.contains("device_admin")) {
+                return true;
+            }
+            // 【防小人-关键】应用信息页：防止孩子"停用"KidShield（停用比卸载更隐蔽！）
+            // 类名通常为 InstalledAppDetails / ApplicationDetail / AppDetailsActivity
+            if (className.contains("InstalledAppDetails") ||
+                className.contains("ApplicationDetail") ||
+                className.contains("AppDetails") ||
+                className.contains("AppDetail")) {
+                return true;
+            }
+            // 应用列表管理页（VIVO/小米常用 AppManagementActivity 等）
+            if (className.contains("AppManagement") || className.contains("ApplicationManage")) {
                 return true;
             }
         }
