@@ -112,6 +112,12 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <!-- 假桌面（安全桌面）：锁屏时展示的可爱环境 -->
+        <activity android:name=".Activities.KidDesktopActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <!-- ==================== Services ==================== -->
 

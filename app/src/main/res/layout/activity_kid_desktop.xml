@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 假桌面（安全桌面）：锁屏时孩子看到的可爱环境 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/kid_clay_bg"
+    android:orientation="vertical">
+
+    <!-- 顶部倒计时横幅 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_clay_card"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏠"
+            android:textSize="34sp" />
+
+        <TextView
+            android:id="@+id/textView_lock_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="安全小天地"
+            android:textColor="@color/kid_clay_text"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textView_lock_reason"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="休息一下下啦~"
+            android:textColor="@color/kid_clay_text_soft"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/textView_lock_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_clay_badge"
+            android:paddingStart="18dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="8dp"
+            android:text="剩余 00:00"
+            android:textColor="@color/kid_clay_text"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- 白名单应用网格 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="8dp"
+        android:text="🌟 现在可以玩这些"
+        android:textColor="@color/kid_clay_text"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView_desktop_apps"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
+        android:scrollbars="none" />
+
+    <!-- 底部操作区 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <Button
+            android:id="@+id/button_call_parent"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_clay_button_green"
+            android:text="📞 呼叫家长"
+            android:textColor="@color/kid_clay_white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/button_desktop_exit"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_clay_button_orange"
+            android:text="⏰ 到点自动解锁"
+            android:textColor="@color/kid_clay_white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>
