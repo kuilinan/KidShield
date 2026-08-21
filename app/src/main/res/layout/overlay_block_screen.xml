@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#CC1A202C"
+    android:background="#CCFFF7ED"
     android:clickable="true"
     android:focusable="true">
 
@@ -10,61 +10,61 @@
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:background="@drawable/bg_clay_card"
+        android:clickable="true"
         android:gravity="center"
         android:orientation="vertical"
-        android:background="@android:color/white"
-        android:padding="28dp"
-        android:clickable="true"
-        android:elevation="12dp"
-        android:radius="16dp">
+        android:padding="26dp">
 
         <TextView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:text="🔒"
-            android:textSize="36sp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/bg_clay_badge"
             android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:text="🔒"
+            android:textSize="32sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:text="已开启保护"
+            android:textColor="@color/kid_clay_text"
             android:textSize="20sp"
-            android:textColor="#1A202C"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
+            android:textStyle="bold" />
 
         <!-- 被限制的应用名称 -->
         <TextView
             android:id="@+id/tv_blocked_app_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/kid_clay_primary"
             android:textSize="14sp"
-            android:textColor="#E53E3E"
             android:textStyle="bold"
-            android:visibility="gone"
-            android:layout_marginBottom="4dp" />
+            android:visibility="gone" />
 
         <!-- 限制原因 -->
         <TextView
             android:id="@+id/tv_block_reason"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="该操作已被家长限制"
-            android:textSize="14sp"
-            android:textColor="#718096"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginTop="4dp"
+            android:text="这个要问过家长才能用哦 🌟"
+            android:textColor="@color/kid_clay_text_soft"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/btn_overlay_ok"
             android:layout_width="match_parent"
-            android:layout_height="46dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_clay_button_blue"
+            android:gravity="center"
             android:text="长按关闭"
+            android:textColor="@color/kid_clay_white"
             android:textSize="16sp"
-            android:textColor="@android:color/white"
-            android:background="@drawable/btn_blue_rounded"
-            android:gravity="center" />
+            android:textStyle="bold" />
 
     </LinearLayout>
 </RelativeLayout>

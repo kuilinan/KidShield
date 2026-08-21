@@ -9,4 +9,22 @@
     <color name="kidshield_card_orange">#ED8936</color>
     <color name="kidshield_card_red">#F56565</color>
     <color name="kidshield_card_purple">#9F7AEA</color>
+
+    <!-- ========== 孩子端 Claymorphism 可爱配色 ========== -->
+    <color name="kid_clay_bg">#FFF7ED</color>          <!-- 暖橙背景 -->
+    <color name="kid_clay_card">#FFFFFF</color>        <!-- 卡片主体 -->
+    <color name="kid_clay_card_shadow">#F6C9A0</color> <!-- 卡片软阴影 -->
+    <color name="kid_clay_primary">#F97316</color>     <!-- 玩趣橙 -->
+    <color name="kid_clay_primary_shadow">#C2580E</color>
+    <color name="kid_clay_blue">#2563EB</color>        <!-- 信任蓝 -->
+    <color name="kid_clay_blue_shadow">#1B46A8</color>
+    <color name="kid_clay_green">#22C55E</color>       <!-- 糖果绿 -->
+    <color name="kid_clay_green_shadow">#178A41</color>
+    <color name="kid_clay_yellow">#FBBF24</color>      <!-- 蜂蜜黄 -->
+    <color name="kid_clay_yellow_shadow">#C98E0B</color>
+    <color name="kid_clay_text">#9A3412</color>        <!-- 深橙文字 -->
+    <color name="kid_clay_text_soft">#B45309</color>
+    <color name="kid_clay_white">#FFFFFF</color>
+    <color name="kid_clay_pink">#F472B6</color>
+    <color name="kid_clay_purple">#A78BFA</color>
 </resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 黏土绿色按钮 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="22dp" />
+                    <solid android:color="@color/kid_clay_green_shadow" />
+                </shape>
+            </item>
+            <item android:bottom="1dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="22dp" />
+                    <solid android:color="@color/kid_clay_green" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="22dp" />
+                    <solid android:color="@color/kid_clay_green_shadow" />
+                </shape>
+            </item>
+            <item android:bottom="5dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="22dp" />
+                    <solid android:color="@color/kid_clay_green" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>
