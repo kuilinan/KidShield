@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -287,17 +288,13 @@ public class AppAccessibilityService extends AccessibilityService {
             if (className.contains("DeviceAdmin") || className.contains("device_admin")) {
                 return true;
             }
-            // 【防小人-关键】应用信息页：防止孩子"停用"KidShield（停用比卸载更隐蔽！）
-            // 类名通常为 InstalledAppDetails / ApplicationDetail / AppDetailsActivity
+            // 【精准盯防】应用信息页：只拦 KidShield 自己的详情页（防停用/卸载）
+            // 其他应用的信息页放行，家长正常管理不受影响
             if (className.contains("InstalledAppDetails") ||
                 className.contains("ApplicationDetail") ||
                 className.contains("AppDetails") ||
                 className.contains("AppDetail")) {
-                return true;
-            }
-            // 应用列表管理页（VIVO/小米常用 AppManagementActivity 等）
-            if (className.contains("AppManagement") || className.contains("ApplicationManage")) {
-                return true;
+                return isKidShieldAppInfoPage();
             }
         }
         // VIVO 安全中心（多版本）
@@ -346,13 +343,38 @@ public class AppAccessibilityService extends AccessibilityService {
         }
         return false;
     }
-
     private boolean isDeveloperSettingsPackage(String packageName) {
         return packageName.equals("com.android.settings") ||
                packageName.equals("com.android.systemui") ||
                packageName.equals("com.android.development") ||
                packageName.contains("developer");
     }
+
+    /**
+     * 精准盯防：判断应用信息页显示的是不是 KidShield 自己
+     * 通过无障碍树读取页面文本（应用名/包名），只拦自己，其他应用放行
+     */
+    private boolean isKidShieldAppInfoPage() {
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+            try {
+                // 应用详情页标题/内容会包含应用名（KidShield 儿童守护）
+                List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText("KidShield");
+                if (nodes != null && !nodes.isEmpty()) return true;
+                nodes = root.findAccessibilityNodeInfosByText("yousafdev");
+                if (nodes != null && !nodes.isEmpty()) return true;
+                nodes = root.findAccessibilityNodeInfosByText("儿童守护");
+                if (nodes != null && !nodes.isEmpty()) return true;
+            } finally {
+                root.recycle();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "读取应用信息页失败", e);
+        }
+        return false;
+    }
+
 
     private void blockApp(String packageName, String reason) {
         long now = System.currentTimeMillis();
