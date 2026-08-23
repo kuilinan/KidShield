@@ -20,10 +20,19 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "kidshield-release.keystore")
+            storePassword = System.getenv("KEYSTORE_PASS") ?: "KidShield@2026!"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "kidshield"
+            keyPassword = System.getenv("KEY_PASS") ?: "KidShield@2026!"
         }
     }
     compileOptions {
