@@ -156,4 +156,70 @@ public class KidCommandStore {
     public String getSignature() {
         return prefs.getString(KEY_POLICY_SIGNATURE, "");
     }
+
+    // ========== 管控密码（防孩子修改管控设置！参考vivo健康使用设备密码） ==========
+
+    /** 设置/修改管控密码（家长操作） */
+    public synchronized void setLockPassword(String password) {
+        KidPolicy policy = loadPolicy();
+        // 存储SHA-256哈希，不存明文
+        policy.lockPassword = sha256(password);
+        savePolicy(policy);
+    }
+
+    /** 验证管控密码 */
+    public synchronized boolean verifyLockPassword(String input) {
+        KidPolicy policy = loadPolicy();
+        if (policy.lockPassword == null || policy.lockPassword.isEmpty()) return true; // 未设置密码=不锁定
+        return sha256(input).equals(policy.lockPassword);
+    }
+
+    /** 是否已设置管控密码 */
+    public synchronized boolean hasLockPassword() {
+        KidPolicy policy = loadPolicy();
+        return policy.lockPassword != null && !policy.lockPassword.isEmpty();
+    }
+
+    private String sha256(String input) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(input.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            return input; // 极端情况兜底
+        }
+    }
+
+    // ========== 临时延长（超时后+15分钟，限1次/天，参考vivo健康使用设备） ==========
+
+    private static final String KEY_LAST_EXTEND_DATE = "last_extend_date";
+    private static final long EXTEND_DURATION_MS = 15 * 60 * 1000; // 15分钟
+
+    /** 尝试临时延长15分钟。成功返回true，当天已用过返回false */
+    public synchronized boolean tryExtendLockOnce() {
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.CHINA)
+                .format(new java.util.Date());
+        String lastDate = prefs.getString(KEY_LAST_EXTEND_DATE, "");
+        if (today.equals(lastDate)) {
+            return false; // 今天已经用过延长机会
+        }
+        // 记录今天已用 + 延长锁屏
+        prefs.edit().putString(KEY_LAST_EXTEND_DATE, today).apply();
+        KidPolicy policy = loadPolicy();
+        if (policy.lockUntil > 0) {
+            policy.lockUntil += EXTEND_DURATION_MS; // 在原截止时间上+15分钟
+            savePolicy(policy);
+            scheduleLockAlarm(policy.lockUntil);
+        }
+        return true;
+    }
+
+    /** 今天还能否延长 */
+    public synchronized boolean canExtendToday() {
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.CHINA)
+                .format(new java.util.Date());
+        return !today.equals(prefs.getString(KEY_LAST_EXTEND_DATE, ""));
+    }
 }

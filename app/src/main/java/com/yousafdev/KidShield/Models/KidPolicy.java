@@ -38,6 +38,9 @@ public class KidPolicy {
     public long lockUntil = 0;                     // 锁屏截止时间（elapsedRealtime 毫秒，防改系统时间！）
     public String lockReason = "";                 // 锁屏原因（展示给孩子）
 
+    // ========== 管控密码（防孩子修改管控设置） ==========
+    public String lockPassword = "";               // 家长管控密码（SHA-256哈希存储）
+
     // ========== 版本 ==========
     public long updatedAt = System.currentTimeMillis();
 

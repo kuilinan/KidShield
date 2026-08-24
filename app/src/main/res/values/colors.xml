@@ -27,4 +27,17 @@
     <color name="kid_clay_white">#FFFFFF</color>
     <color name="kid_clay_pink">#F472B6</color>
     <color name="kid_clay_purple">#A78BFA</color>
+
+    <!-- ========== 家长端 极简瑞士风配色 ========== -->
+    <color name="parent_bg">#F8FAFC</color>            <!-- 浅灰蓝背景 -->
+    <color name="parent_card">#FFFFFF</color>          <!-- 白色卡片 -->
+    <color name="parent_border">#E4ECFC</color>        <!-- 卡片边框 -->
+    <color name="parent_primary">#2563EB</color>       <!-- 家庭蓝 -->
+    <color name="parent_primary_soft">#EFF6FF</color>  <!-- 浅蓝底 -->
+    <color name="parent_green">#059669</color>         <!-- 任务绿 -->
+    <color name="parent_orange">#D97706</color>        <!-- 琥珀 -->
+    <color name="parent_red">#DC2626</color>           <!-- 危险红 -->
+    <color name="parent_text">#0F172A</color>          <!-- 主文字 -->
+    <color name="parent_text_soft">#475569</color>     <!-- 次文字 -->
+    <color name="parent_text_muted">#94A3B8</color>    <!-- 弱文字 -->
 </resources>
